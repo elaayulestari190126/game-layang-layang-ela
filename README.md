@@ -1,2 +1,2 @@
-# index.html
+# game layang layang
 game tradisional
