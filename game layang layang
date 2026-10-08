@@ -1,0 +1,2148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Jelajah Layang-Layang Nusantara</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    touch-action: none;
+    -webkit-user-select: none;
+  }
+
+  #gameContainer {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    overflow: hidden;
+    background: linear-gradient(180deg, #5bb8f5 0%, #87ceeb 40%, #b3e0ff 100%);
+  }
+
+  #gameCanvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; transition: opacity 0.3s; padding: 10px; }
+  .overlay.hidden { display: none; }
+
+  /* MAIN MENU */
+  #mainMenu { background: linear-gradient(180deg, rgba(30,80,160,0.75) 0%, rgba(100,180,255,0.55) 100%); backdrop-filter: blur(3px); }
+  .game-logo { font-size: clamp(26px, 5vw, 58px); font-weight: 900; color: #fff; text-shadow: 0 3px 0 #b8860b, 0 6px 14px rgba(0,0,0,0.5); letter-spacing: clamp(1px, 0.3vw, 3px); text-align: center; line-height: 1.15; margin-bottom: clamp(4px, 0.8vh, 10px); animation: logoFloat 3s ease-in-out infinite; }
+  @keyframes logoFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  .logo-sub { font-size: clamp(10px, 1.5vw, 17px); color: #ffe082; text-shadow: 0 2px 4px rgba(0,0,0,0.5); margin-bottom: clamp(12px, 2.5vh, 28px); letter-spacing: clamp(2px, 0.4vw, 5px); font-weight: bold; text-align: center; padding: 0 10px; }
+
+  .menu-btn { width: clamp(220px, 28vw, 400px); padding: clamp(8px, 1.4vh, 15px) 0; margin: clamp(3px, 0.6vh, 7px) 0; border: clamp(2px, 0.3vw, 4px) solid #fff; border-radius: 50px; background: linear-gradient(180deg, #ff8a3d 0%, #e85d04 100%); color: #fff; font-size: clamp(13px, 1.6vw, 21px); font-weight: bold; cursor: pointer; box-shadow: 0 5px 0 #a33c00, 0 8px 16px rgba(0,0,0,0.35); transition: all 0.1s; letter-spacing: clamp(0.5px, 0.15vw, 2px); }
+  .menu-btn:hover { transform: translateY(-2px); }
+  .menu-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #a33c00; }
+  .menu-btn.blue { background: linear-gradient(180deg, #4facfe 0%, #0077cc 100%); box-shadow: 0 5px 0 #004d80, 0 8px 16px rgba(0,0,0,0.35); }
+  .menu-btn.blue:active { box-shadow: 0 2px 0 #004d80; }
+  .menu-btn.green { background: linear-gradient(180deg, #66d67a 0%, #2e9e44 100%); box-shadow: 0 5px 0 #1d6b2c, 0 8px 16px rgba(0,0,0,0.35); }
+  .menu-btn.green:active { box-shadow: 0 2px 0 #1d6b2c; }
+  .menu-btn.gray { background: linear-gradient(180deg, #78909c 0%, #455a64 100%); box-shadow: 0 5px 0 #263238, 0 8px 16px rgba(0,0,0,0.35); }
+  .menu-btn.gray:active { box-shadow: 0 2px 0 #263238; }
+
+  /* PANEL */
+  .panel {
+    background: linear-gradient(180deg, rgba(15,40,80,0.96) 0%, rgba(8,25,55,0.96) 100%);
+    border-radius: 18px;
+    padding: 22px 28px;
+    width: min(92%, 820px);
+    max-height: 94%;
+    overflow-y: auto;
+    color: #e8f4ff;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+    border: 1.5px solid rgba(120,200,255,0.25);
+    animation: panelIn 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  }
+  @keyframes panelIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  .panel::-webkit-scrollbar { width: 6px; }
+  .panel::-webkit-scrollbar-track { background: transparent; }
+  .panel::-webkit-scrollbar-thumb { background: rgba(120,200,255,0.3); border-radius: 10px; }
+
+  .panel-header { text-align: center; padding-bottom: 12px; margin-bottom: 14px; border-bottom: 1px solid rgba(120,200,255,0.15); }
+  .panel-header .eyebrow { font-size: 10px; color: #64b5f6; letter-spacing: 4px; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
+  .panel-header h2 { color: #fff; font-size: 20px; letter-spacing: 1px; font-weight: 700; }
+
+  /* MENU GABUNGAN */
+  #provincesMenu .panel { max-width: 860px; }
+
+  .section-label {
+    font-size: 10.5px;
+    color: #64b5f6;
+    letter-spacing: 2.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 12px 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(100,181,246,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .section-label .section-hint { font-size: 9.5px; color: #7d9bb8; letter-spacing: 0.5px; font-weight: 500; text-transform: none; }
+
+  .combo-summary {
+    background: linear-gradient(135deg, rgba(79,172,254,0.12), rgba(255,213,79,0.08));
+    border: 1px solid rgba(79,172,254,0.3);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .combo-summary .combo-item { flex: 1; display: flex; gap: 10px; align-items: center; min-width: 0; }
+  .combo-summary .combo-icon { width: 44px; height: 44px; border-radius: 8px; background: rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; overflow: hidden; flex-shrink: 0; border: 1px solid rgba(120,200,255,0.2); }
+  .combo-summary .combo-icon canvas { width: 100%; height: 100%; }
+  .combo-summary .combo-text { flex: 1; min-width: 0; }
+  .combo-summary .combo-text b { display: block; color: #ffd54f; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .combo-summary .combo-text span { font-size: 10.5px; color: #8ba8c5; letter-spacing: 0.5px; }
+  .combo-divider { width: 1px; height: 36px; background: rgba(120,200,255,0.2); }
+
+  .kite-grid-compact {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 6px;
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .kite-card-mini {
+    background: rgba(255,255,255,0.05);
+    border: 1.5px solid rgba(120,200,255,0.2);
+    border-radius: 10px;
+    padding: 8px 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .kite-card-mini:hover { background: rgba(255,255,255,0.1); border-color: rgba(120,200,255,0.45); }
+  .kite-card-mini.selected { border-color: #ffd54f; background: rgba(255,213,79,0.15); box-shadow: 0 0 12px rgba(255,213,79,0.4); }
+  .kite-card-mini canvas { width: 50px; height: 50px; display: block; margin: 0 auto 4px; }
+  .kite-card-mini .kite-name-mini { font-size: 11px; color: #fff; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kite-card-mini.selected .kite-name-mini { color: #ffd54f; }
+
+  .region-tabs { display: flex; gap: 5px; margin-bottom: 8px; flex-wrap: wrap; justify-content: center; }
+  .region-tab {
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(120,200,255,0.2);
+    color: #90caf9;
+    font-size: 10.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .region-tab:hover { background: rgba(255,255,255,0.1); }
+  .region-tab.active { background: linear-gradient(180deg, #4facfe, #0077cc); border-color: #4facfe; color: #fff; box-shadow: 0 3px 10px rgba(79,172,254,0.4); }
+
+  .province-grid-compact {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+    gap: 6px;
+    max-height: 240px;
+    overflow-y: auto;
+    padding: 4px;
+    margin-bottom: 6px;
+    background: rgba(0,0,0,0.15);
+    border-radius: 8px;
+  }
+  .province-grid-compact::-webkit-scrollbar { width: 5px; }
+  .province-grid-compact::-webkit-scrollbar-track { background: transparent; }
+  .province-grid-compact::-webkit-scrollbar-thumb { background: rgba(120,200,255,0.3); border-radius: 6px; }
+
+  .province-card { background: rgba(255,255,255,0.05); border: 1.5px solid rgba(120,200,255,0.2); border-radius: 7px; overflow: hidden; cursor: pointer; transition: all 0.2s; }
+  .province-card:hover { transform: translateY(-2px); border-color: rgba(120,200,255,0.5); box-shadow: 0 6px 16px rgba(0,0,0,0.4); }
+  .province-card.selected { border-color: #ffd54f; box-shadow: 0 0 0 2px rgba(255,213,79,0.4), 0 6px 18px rgba(255,213,79,0.3); }
+  .province-card canvas { width: 100%; height: 42px; display: block; }
+  .province-card .prov-name {
+    padding: 4px 5px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    line-height: 1.2;
+    background: rgba(0,0,0,0.4);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .province-card.selected .prov-name { background: rgba(255,213,79,0.25); }
+
+  .selected-info {
+    background: rgba(79,172,254,0.1);
+    border: 1px solid rgba(79,172,254,0.3);
+    border-left: 3px solid #4facfe;
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-size: 11.5px;
+    color: #c8dff5;
+    line-height: 1.55;
+  }
+  .selected-info .info-title { color: #ffd54f; font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+  .selected-info .info-fact { color: #90caf9; font-style: italic; font-size: 10.5px; margin-top: 4px; }
+
+  /* CARA BERMAIN */
+  .guide-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+  .guide-block { background: rgba(255,255,255,0.035); border: 1px solid rgba(120,200,255,0.15); border-radius: 10px; padding: 12px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .guide-num { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #4facfe, #0077cc); display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: 800; color: #fff; }
+  .guide-body h4 { font-size: 12.5px; color: #fff; font-weight: 700; margin-bottom: 3px; }
+  .guide-body p { font-size: 11px; color: #a8c4dd; line-height: 1.5; }
+  .kb-row { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+  .kb-key { display: inline-flex; justify-content: center; align-items: center; min-width: 24px; height: 24px; padding: 0 6px; background: linear-gradient(180deg, #37474f, #1f2c33); border: 1px solid #546e7a; border-bottom-width: 2px; border-radius: 4px; font-size: 11px; font-weight: 600; color: #cfd8dc; font-family: 'Consolas', monospace; }
+
+  .score-legend { display: flex; background: rgba(0,0,0,0.25); border: 1px solid rgba(120,200,255,0.15); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+  .legend-item { flex: 1; padding: 12px 8px; text-align: center; border-right: 1px solid rgba(120,200,255,0.12); }
+  .legend-item:last-child { border-right: none; }
+  .legend-icon { display: inline-flex; width: 26px; height: 26px; border-radius: 50%; justify-content: center; align-items: center; font-size: 13px; font-weight: 800; color: #0a1628; margin-bottom: 5px; }
+  .legend-icon.star { background: linear-gradient(135deg, #ffd54f, #f9a825); }
+  .legend-icon.coin { background: linear-gradient(135deg, #ffca28, #f57f17); }
+  .legend-icon.danger { background: linear-gradient(135deg, #ef5350, #c62828); color: #fff; }
+  .legend-title { display: block; font-size: 11px; color: #fff; font-weight: 700; margin-bottom: 2px; }
+  .legend-desc { display: block; font-size: 10px; color: #7d9bb8; }
+
+  .note-box { background: rgba(79,172,254,0.08); border-left: 3px solid #4facfe; border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: 11px; color: #b8d4ee; line-height: 1.55; margin-top: 4px; }
+  .note-box strong { color: #4facfe; font-weight: 700; letter-spacing: 0.5px; font-size: 9.5px; display: block; margin-bottom: 2px; text-transform: uppercase; }
+
+  /* PENGATURAN */
+  .settings-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .settings-item { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.035); border: 1px solid rgba(120,200,255,0.15); border-radius: 10px; padding: 12px 14px; }
+  .settings-info { flex: 1; text-align: left; }
+  .settings-info b { display: block; color: #fff; font-size: 12.5px; margin-bottom: 2px; }
+  .settings-info span { font-size: 10.5px; color: #8ba8c5; line-height: 1.4; }
+  .toggle { position: relative; width: 50px; height: 25px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #2c3e50; border-radius: 25px; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1); }
+  .toggle .slider:before { position: absolute; content: ""; height: 78%; width: 38%; left: 6%; top: 11%; background: #fff; border-radius: 50%; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+  .toggle input:checked + .slider { background: linear-gradient(180deg,#4facfe,#0077cc); box-shadow: 0 0 10px rgba(79,172,254,0.4); }
+  .toggle input:checked + .slider:before { transform: translateX(140%); }
+
+  .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+  .btn-sm {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 30px;
+    font-size: 12.5px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #fff;
+    transition: transform 0.1s;
+    letter-spacing: 0.5px;
+  }
+  .btn-sm:active { transform: scale(0.95); }
+  .btn-sm.yellow { background: linear-gradient(180deg,#ffca28,#f9a825); color:#4a3000; box-shadow:0 4px 0 #b8860b; }
+  .btn-sm.red { background: linear-gradient(180deg,#ef5350,#c62828); box-shadow:0 4px 0 #8e1c1c; }
+  .btn-sm.blue2 { background: linear-gradient(180deg,#42a5f5,#1565c0); box-shadow:0 4px 0 #0d3f7a; }
+  .btn-sm.green2 { background: linear-gradient(180deg,#66bb6a,#2e7d32); box-shadow:0 4px 0 #1b4d1f; }
+  .btn-sm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* HUD */
+  #hud { position: absolute; top: 0; left: 0; width: 100%; padding: clamp(6px, 1vh, 12px) clamp(8px, 1.2vw, 16px); display: none; justify-content: space-between; align-items: flex-start; pointer-events: none; z-index: 5; font-weight: bold; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
+  #hud.active { display: flex; }
+  .hud-left, .hud-right { display: flex; flex-direction: column; gap: clamp(2px, 0.4vh, 4px); }
+  .hud-right { align-items: flex-end; }
+  .hud-item { background: rgba(0,0,0,0.35); padding: clamp(3px, 0.6vh, 5px) clamp(8px, 1vw, 13px); border-radius: 18px; font-size: clamp(10px, 1.1vw, 14px); backdrop-filter: blur(2px); border: 1px solid rgba(255,255,255,0.15); }
+  .hud-item .lbl { color: #90caf9; font-size: clamp(8px, 0.9vw, 11px); }
+  .hud-item .val { color: #fff; font-size: clamp(12px, 1.25vw, 16px); }
+  #hearts { font-size: clamp(12px, 1.4vw, 18px); letter-spacing: 2px; }
+  .heart-full { color: #ff5252; }
+  .heart-empty { color: #555; }
+  .hud-province { background: rgba(0,0,0,0.5); padding: clamp(2px, 0.4vh, 4px) clamp(7px, 0.9vw, 12px); border-radius: 15px; font-size: clamp(8px, 0.9vw, 11px); color: #ffd54f; letter-spacing: 1px; font-weight: 700; border: 1px solid rgba(255,213,79,0.4); text-transform: uppercase; }
+
+  #pauseBtn { position: absolute; top: clamp(6px, 1vh, 12px); left: 50%; transform: translateX(-50%); padding: clamp(5px, 0.9vh, 8px) clamp(12px, 1.5vw, 20px); border-radius: 30px; background: linear-gradient(180deg, #ff8a3d, #e85d04); color: #fff; font-size: clamp(11px, 1.1vw, 14px); font-weight: bold; border: 2px solid #fff; box-shadow: 0 4px 0 #a33c00, 0 6px 14px rgba(0,0,0,0.4); cursor: pointer; display: none; z-index: 15; letter-spacing: 1px; transition: all 0.1s; pointer-events: auto; }
+  #pauseBtn.active { display: block; }
+  #pauseBtn:hover { transform: translateX(-50%) translateY(-2px); }
+  #pauseBtn:active { transform: translateX(-50%) translateY(2px); box-shadow: 0 2px 0 #a33c00; }
+
+  #fullscreenBtn { position: absolute; top: clamp(6px, 1vh, 12px); right: clamp(6px, 1vw, 12px); width: clamp(32px, 3.5vw, 46px); height: clamp(32px, 3.5vw, 46px); border-radius: 50%; background: rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.6); color: #fff; font-size: clamp(14px, 1.6vw, 20px); display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 40; backdrop-filter: blur(4px); transition: all 0.2s; padding: 0; line-height: 1; }
+  #fullscreenBtn:hover { background: rgba(0,0,0,0.75); transform: scale(1.08); }
+  #fullscreenBtn:active { transform: scale(0.95); }
+
+  #pauseOverlay { background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); }
+  .pause-panel { background: linear-gradient(180deg, rgba(20,45,90,0.98) 0%, rgba(10,25,55,0.98) 100%); border-radius: 20px; padding: 24px 30px; width: min(90%, 440px); color: #e8f4ff; box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 2px rgba(120,200,255,0.3); text-align: center; }
+  .pause-panel h2 { color: #ffd54f; font-size: 22px; letter-spacing: 3px; margin-bottom: 4px; }
+  .pause-sub { font-size: 11px; color: #b0c8e0; margin-bottom: 16px; font-style: italic; }
+  .pause-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid rgba(120,200,255,0.2); }
+  .pause-stat .ps-val { font-size: 18px; font-weight: 900; color: #ffd54f; line-height: 1.1; }
+  .pause-stat .ps-lbl { font-size: 9.5px; color: #90caf9; letter-spacing: 1px; margin-top: 2px; }
+  .pause-btn { width: 100%; padding: 11px 0; margin: 4px 0; border: none; border-radius: 30px; font-size: 13px; font-weight: bold; cursor: pointer; color: #fff; letter-spacing: 1px; transition: transform 0.1s; }
+  .pause-btn:active { transform: scale(0.97); }
+  .pause-btn.resume { background: linear-gradient(180deg,#66d67a,#2e9e44); box-shadow: 0 5px 0 #1d6b2c; font-size: 14px; }
+  .pause-btn.retry { background: linear-gradient(180deg,#ffca28,#f9a825); color: #4a3000; box-shadow: 0 5px 0 #b8860b; }
+  .pause-btn.quit { background: linear-gradient(180deg,#ef5350,#c62828); box-shadow: 0 5px 0 #8e1c1c; }
+
+  #countdownOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.35); z-index: 25; pointer-events: none; }
+  #countdownOverlay.active { display: flex; }
+  #countdownNum { font-size: clamp(70px, 15vw, 180px); font-weight: 900; color: #fff; text-shadow: 0 0 40px #ffd54f, 0 0 80px #ff8f00, 0 6px 20px rgba(0,0,0,0.8); animation: countdownPop 0.85s ease-out; }
+  @keyframes countdownPop { 0% { transform: scale(0.3); opacity: 0; } 40% { transform: scale(1.25); opacity: 1; } 70% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+
+  #factPopup { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.9); background: linear-gradient(180deg, rgba(20,45,90,0.97), rgba(10,25,55,0.97)); border: 2px solid rgba(255,213,79,0.6); border-radius: 16px; padding: 20px 26px; max-width: min(90%, 540px); width: 88%; color: #e8f4ff; box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 30px rgba(255,213,79,0.3); z-index: 28; opacity: 0; pointer-events: none; transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); text-align: center; }
+  #factPopup.show { opacity: 1; transform: translate(-50%,-50%) scale(1); pointer-events: auto; }
+  #factPopup .fact-eyebrow { font-size: 9.5px; color: #ffd54f; letter-spacing: 4px; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+  #factPopup .fact-province { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: 1px; margin-bottom: 10px; }
+  #factPopup .fact-text { font-size: 11.5px; color: #c8dff5; line-height: 1.65; text-align: justify; margin-bottom: 14px; }
+  #factPopup .fact-close { padding: 8px 20px; border: none; border-radius: 20px; background: linear-gradient(180deg,#ffca28,#f9a825); color: #4a3000; font-size: 11.5px; font-weight: 800; cursor: pointer; letter-spacing: 1px; box-shadow: 0 3px 0 #b8860b; }
+  #factPopup .fact-close:active { transform: translateY(2px); box-shadow: 0 1px 0 #b8860b; }
+
+  #gameOverOverlay { background: rgba(20,0,0,0.82); backdrop-filter: blur(4px); }
+  .go-title { font-size: clamp(28px, 4.5vw, 48px); font-weight: 900; color: #ff5252; text-shadow: 0 3px 0 #7a0000, 0 6px 16px rgba(0,0,0,0.6); margin-bottom: 6px; }
+  .go-sub { font-size: clamp(11px, 1.2vw, 15px); color: #ffcdd2; margin-bottom: 18px; text-align: center; padding: 0 8px; }
+
+  #dpad { position: absolute; bottom: clamp(10px, 2vh, 20px); left: 50%; transform: translateX(-50%); display: none; z-index: 6; gap: clamp(3px, 0.5vh, 6px); flex-direction: column; align-items: center; pointer-events: none; }
+  #dpad.active { display: flex; }
+  .dpad-row { display: flex; gap: clamp(3px, 0.5vh, 6px); }
+  .dpad-btn { width: clamp(42px, 6vw, 68px); height: clamp(42px, 6vw, 68px); border-radius: clamp(8px, 1vw, 14px); background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: #fff; font-size: clamp(18px, 2.2vw, 28px); display: flex; justify-content: center; align-items: center; pointer-events: auto; cursor: pointer; backdrop-filter: blur(2px); transition: background 0.1s; touch-action: none; }
+  .dpad-btn:active, .dpad-btn.pressed { background: rgba(255,213,79,0.6); }
+
+  #levelNotif { position: absolute; top: 40%; left: 50%; transform: translate(-50%,-50%); font-size: clamp(24px, 3.5vw, 44px); font-weight: 900; color: #fff; text-shadow: 0 0 20px #ffd54f, 0 4px 10px rgba(0,0,0,0.7); z-index: 20; pointer-events: none; opacity: 0; transition: opacity 0.4s; text-align: center; padding: 0 10px; }
+  #levelNotif.show { opacity: 1; }
+  .small-note { font-size: clamp(9px, 1vw, 12px); color: #9fc4e8; margin-top: clamp(4px, 0.8vh, 8px); text-align: center; padding: 0 10px; }
+
+  /* HP Portrait */
+  @media (max-width: 700px) and (orientation: portrait) {
+    .game-logo { font-size: clamp(22px, 7vw, 40px); }
+    .logo-sub { font-size: clamp(9px, 2.5vw, 13px); letter-spacing: 2px; margin-bottom: 12px; }
+    .menu-btn { width: clamp(200px, 75vw, 340px); padding: clamp(9px, 1.4vh, 14px) 0; font-size: clamp(13px, 3.5vw, 17px); margin: 3px 0; }
+    .panel { padding: 16px; width: 95%; }
+    .panel-header h2 { font-size: 17px; }
+    .panel-header .eyebrow { font-size: 8px; letter-spacing: 2px; }
+    .guide-grid { grid-template-columns: 1fr; }
+    .kite-grid-compact { max-width: 100%; }
+    .province-grid-compact { grid-template-columns: repeat(3, 1fr); max-height: 180px; }
+    .combo-summary .combo-icon { width: 38px; height: 38px; }
+    .combo-summary .combo-text b { font-size: 11px; }
+    .combo-summary .combo-text span { font-size: 9px; }
+    .selected-info { font-size: 10.5px; }
+    .selected-info .info-title { font-size: 12px; }
+    #pauseBtn { padding: 5px 12px; font-size: 11px; top: 8px; }
+    #fullscreenBtn { width: 34px; height: 34px; font-size: 16px; top: 8px; right: 8px; }
+    .dpad-btn { width: 52px; height: 52px; font-size: 22px; }
+    .pause-panel { padding: 20px 22px; width: 92%; }
+    .pause-panel h2 { font-size: 20px; }
+  }
+
+  /* HP Landscape */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .game-logo { font-size: clamp(18px, 4vw, 30px); }
+    .logo-sub { font-size: 9px; margin-bottom: 6px; letter-spacing: 2px; }
+    .menu-btn { width: clamp(180px, 28vw, 320px); padding: 5px 0; font-size: clamp(11px, 1.5vw, 14px); margin: 2px 0; border-width: 2px; }
+    .small-note { font-size: 9px; margin-top: 3px; }
+    .panel { padding: 12px 18px; }
+    .panel-header { padding-bottom: 6px; margin-bottom: 8px; }
+    .panel-header h2 { font-size: 15px; }
+    .panel-header .eyebrow { font-size: 8px; letter-spacing: 2px; }
+    .guide-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .guide-block { padding: 8px 10px; gap: 8px; }
+    .guide-num { width: 22px; height: 22px; font-size: 10px; }
+    .guide-body h4 { font-size: 11px; }
+    .guide-body p { font-size: 9.5px; }
+    .kite-grid-compact { max-width: 100%; }
+    .kite-card-mini canvas { width: 32px; height: 32px; }
+    .kite-card-mini .kite-name-mini { font-size: 9px; }
+    .province-grid-compact { grid-template-columns: repeat(6, 1fr); max-height: 120px; gap: 4px; }
+    .province-card canvas { height: 34px; }
+    .province-card .prov-name { font-size: 8.5px; padding: 2px; }
+    .combo-summary { padding: 6px 10px; margin-bottom: 5px; }
+    .combo-summary .combo-icon { width: 34px; height: 34px; }
+    .combo-summary .combo-text b { font-size: 10px; }
+    .combo-summary .combo-text span { font-size: 8.5px; }
+    .selected-info { padding: 6px 10px; margin-bottom: 6px; font-size: 10px; }
+    .selected-info .info-title { font-size: 11px; }
+    .selected-info .info-fact { font-size: 9px; }
+    .btn-sm { padding: 6px 16px; font-size: 11px; }
+    .section-label { margin: 5px 0 4px; font-size: 9px; }
+    .score-legend { margin-bottom: 8px; }
+    .legend-item { padding: 6px 4px; }
+    .legend-icon { width: 20px; height: 20px; font-size: 10px; }
+    .legend-title { font-size: 9px; }
+    .legend-desc { font-size: 8.5px; }
+    .settings-item { padding: 8px 12px; }
+    .settings-info b { font-size: 11px; }
+    .settings-info span { font-size: 9px; }
+    .toggle { width: 42px; height: 22px; }
+    #pauseBtn { padding: 5px 12px; font-size: 11px; top: 6px; }
+    #fullscreenBtn { width: 30px; height: 30px; font-size: 14px; top: 6px; right: 8px; }
+    .dpad-btn { width: 46px; height: 46px; font-size: 18px; }
+    #dpad { bottom: 6px; }
+    .hud-item { padding: 2px 8px; font-size: 10.5px; }
+    .hud-item .lbl { font-size: 8.5px; }
+    .hud-item .val { font-size: 12px; }
+    .hud-province { font-size: 8.5px; }
+    #hearts { font-size: 13px; }
+    #countdownNum { font-size: 80px; }
+    .pause-panel { padding: 16px 20px; max-width: 420px; }
+    .pause-panel h2 { font-size: 18px; }
+    .pause-btn { padding: 8px 0; font-size: 11.5px; }
+    .pause-btn.resume { font-size: 13px; }
+    .pause-stats { padding: 8px; margin-bottom: 10px; }
+    .pause-stat .ps-val { font-size: 16px; }
+    .pause-stat .ps-lbl { font-size: 8px; }
+    #levelNotif { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+<div id="gameContainer">
+  <canvas id="gameCanvas" width="900" height="540"></canvas>
+  <button id="pauseBtn">PAUSE</button>
+  <button id="fullscreenBtn" title="Fullscreen">⛶</button>
+
+  <div id="hud">
+    <div class="hud-left">
+      <div class="hud-item"><span class="lbl">LEVEL</span> <span class="val" id="hudLevel">1</span></div>
+      <div class="hud-item"><span class="lbl">SKOR</span> <span class="val" id="hudScore">0</span></div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-province" id="hudProvince">JAWA BARAT</div>
+      <div class="hud-item" id="hearts">❤️❤️❤️</div>
+      <div class="hud-item"><span class="lbl">KOIN</span> <span class="val" id="hudCoins">0</span></div>
+      <div class="hud-item"><span class="lbl">BINTANG</span> <span class="val" id="hudStars">0</span></div>
+    </div>
+  </div>
+
+  <div id="dpad">
+    <div class="dpad-row"><div class="dpad-btn" data-dir="up">⬆️</div></div>
+    <div class="dpad-row">
+      <div class="dpad-btn" data-dir="left">⬅️</div>
+      <div class="dpad-btn" data-dir="down">⬇️</div>
+      <div class="dpad-btn" data-dir="right">➡️</div>
+    </div>
+  </div>
+
+  <div id="levelNotif"></div>
+
+  <div id="factPopup">
+    <div class="fact-eyebrow">TAHUKAH KAMU</div>
+    <div class="fact-province" id="factProvince">Bali</div>
+    <div class="fact-text" id="factText">...</div>
+    <button class="fact-close" id="factClose">MENGERTI</button>
+  </div>
+
+  <div id="countdownOverlay"><div id="countdownNum">3</div></div>
+
+  <div class="overlay" id="mainMenu">
+    <div class="game-logo">JELAJAH<br>LAYANG-LAYANG<br>NUSANTARA</div>
+    <div class="logo-sub">PETUALANGAN DI 34 PROVINSI INDONESIA</div>
+    <button class="menu-btn" id="btnPlay">MULAI BERMAIN</button>
+    <button class="menu-btn blue" id="btnProvinces">MULAI PETUALANGAN</button>
+    <button class="menu-btn green" id="btnHow">CARA BERMAIN</button>
+    <button class="menu-btn gray" id="btnSettings">PENGATURAN</button>
+    <div class="small-note">Jelajahi langit dari Sabang sampai Merauke</div>
+  </div>
+
+  <div class="overlay hidden" id="provincesMenu">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="eyebrow">PERSIAPAN TERBANG</div>
+        <h2>Pilih Provinsi & Layang-Layang</h2>
+      </div>
+
+      <div class="combo-summary">
+        <div class="combo-item">
+          <div class="combo-icon"><canvas id="comboKitePreview" width="80" height="80"></canvas></div>
+          <div class="combo-text">
+            <b id="comboKiteName">Layang Tradisional</b>
+            <span>Karakter terpilih</span>
+          </div>
+        </div>
+        <div class="combo-divider"></div>
+        <div class="combo-item">
+          <div class="combo-icon"><canvas id="comboProvPreview" width="80" height="80"></canvas></div>
+          <div class="combo-text">
+            <b id="comboProvName">Jawa Barat</b>
+            <span>Provinsi terpilih</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">
+        <span>① Pilih Layang-Layang</span>
+        <span class="section-hint">4 karakter</span>
+      </div>
+      <div class="kite-grid-compact" id="kiteGridCompact"></div>
+
+      <div class="section-label">
+        <span>② Pilih Provinsi</span>
+        <span class="section-hint">34 provinsi Indonesia</span>
+      </div>
+      <div class="region-tabs" id="regionTabs"></div>
+      <div class="province-grid-compact" id="provinceGrid"></div>
+
+      <div class="selected-info" id="selectedInfo">
+        <div class="info-title" id="infoTitle">Jawa Barat</div>
+        <div class="info-desc" id="infoDesc">Gunung & kebun teh hijau</div>
+        <div class="info-fact" id="infoFact"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-sm yellow" id="btnProvincePlay">MULAI BERMAIN</button>
+        <button class="btn-sm red" id="btnProvinceBack">KEMBALI</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="settingsMenu">
+    <div class="panel" style="max-width:520px;">
+      <div class="panel-header">
+        <div class="eyebrow">PREFERENSI</div>
+        <h2>Pengaturan</h2>
+      </div>
+      <div class="settings-list">
+        <div class="settings-item">
+          <div class="settings-info"><b>Musik Latar</b><span>Musik "Cublak-Cublak Suweng" — lagu daerah Jawa</span></div>
+          <label class="toggle"><input type="checkbox" id="toggleMusic" checked><span class="slider"></span></label>
+        </div>
+        <div class="settings-item">
+          <div class="settings-info"><b>Efek Suara</b><span>Suara tombol, koin, bintang, dan lainnya</span></div>
+          <label class="toggle"><input type="checkbox" id="toggleSFX" checked><span class="slider"></span></label>
+        </div>
+        <div class="settings-item">
+          <div class="settings-info"><b>Fakta Provinsi</b><span>Tampilkan fakta unik saat mulai bermain</span></div>
+          <label class="toggle"><input type="checkbox" id="toggleFact" checked><span class="slider"></span></label>
+        </div>
+      </div>
+      <div class="note-box"><strong>INFO</strong>Pengaturan ini berlaku langsung pada permainan.</div>
+      <div class="btn-row"><button class="btn-sm blue2" id="btnSettingsBack">KEMBALI KE MENU</button></div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="howMenu">
+    <div class="panel">
+      <div class="panel-header"><div class="eyebrow">PANDUAN</div><h2>Cara Bermain</h2></div>
+      <div class="guide-grid">
+        <div class="guide-block"><div class="guide-num">1</div><div class="guide-body"><h4>Kontrol Permainan</h4><p>Gunakan tombol arah untuk mengendalikan layang-layang di langit.</p><div class="kb-row"><span class="kb-key">↑</span><span class="kb-key">↓</span><span class="kb-key">←</span><span class="kb-key">→</span></div></div></div>
+        <div class="guide-block"><div class="guide-num">2</div><div class="guide-body"><h4>Perangkat Sentuh</h4><p>Pada layar HP, gunakan tombol arah virtual di bagian bawah layar.</p></div></div>
+        <div class="guide-block"><div class="guide-num">3</div><div class="guide-body"><h4>Pilih Provinsi</h4><p>Setiap provinsi memiliki latar langit dan ciri khas yang berbeda — dari Sabang sampai Merauke.</p></div></div>
+        <div class="guide-block"><div class="guide-num">4</div><div class="guide-body"><h4>Jeda Permainan</h4><p>Tekan tombol PAUSE atau tombol ESC / P pada keyboard untuk menghentikan permainan sementara.</p></div></div>
+      </div>
+      <div class="score-legend">
+        <div class="legend-item"><div class="legend-icon star">★</div><span class="legend-title">Bintang</span><span class="legend-desc">+50 poin</span></div>
+        <div class="legend-item"><div class="legend-icon coin">$</div><span class="legend-title">Koin</span><span class="legend-desc">+25 poin</span></div>
+        <div class="legend-item"><div class="legend-icon danger">!</div><span class="legend-title">Rintangan</span><span class="legend-desc">-1 nyawa</span></div>
+      </div>
+      <div class="note-box"><strong>TIPS</strong>Tetap di bagian tengah layar agar memiliki ruang manuver lebih luas. Prioritaskan bintang emas karena nilainya paling besar.</div>
+      <div class="btn-row"><button class="btn-sm blue2" id="btnHowBack">KEMBALI KE MENU</button></div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="pauseOverlay">
+    <div class="pause-panel">
+      <h2>GAME DIJEDA</h2>
+      <div class="pause-sub">Layang-layangmu beristirahat sejenak di langit</div>
+      <div class="pause-stats">
+        <div class="pause-stat"><div class="ps-val" id="pauseScore">0</div><div class="ps-lbl">SKOR</div></div>
+        <div class="pause-stat"><div class="ps-val" id="pauseLevel">1</div><div class="ps-lbl">LEVEL</div></div>
+        <div class="pause-stat"><div class="ps-val" id="pauseLives">3</div><div class="ps-lbl">NYAWA</div></div>
+      </div>
+      <button class="pause-btn resume" id="btnResume">LANJUTKAN BERMAIN</button>
+      <button class="pause-btn retry" id="btnRestart">ULANGI DARI AWAL</button>
+      <button class="pause-btn quit" id="btnToMenu">KEMBALI KE MENU UTAMA</button>
+      <div style="font-size:10px;color:#90caf9;margin-top:10px;">Tekan <b style="color:#ffd54f;">ESC</b> / <b style="color:#ffd54f;">P</b> untuk lanjut cepat</div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="gameOverOverlay">
+    <div class="panel" style="max-width:440px;text-align:center;">
+      <div class="go-title">GAME OVER</div>
+      <div class="go-sub">Layang-layangmu jatuh. Coba lagi untuk terbang lebih tinggi.</div>
+      <div style="font-size:15px;color:#fff;margin-bottom:5px;">Skor Akhir: <b id="finalScore" style="color:#ffd54f;font-size:22px;">0</b></div>
+      <div style="font-size:12.5px;color:#9fc4e8;margin-bottom:18px;">Level: <b id="finalLevel">1</b> | Koin: <b id="finalCoins">0</b> | Bintang: <b id="finalStars">0</b></div>
+      <div class="btn-row" style="flex-direction:column;">
+        <button class="btn-sm green2" id="btnGoRestart" style="width:100%;">MAIN LAGI</button>
+        <button class="btn-sm blue2" id="btnGoChooseProvince" style="width:100%;">GANTI PROVINSI</button>
+        <button class="btn-sm red" id="btnGoMenu" style="width:100%;">MENU UTAMA</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   JELAJAH LAYANG-LAYANG NUSANTARA
+   ========================================================= */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+const GameState = { MENU:'menu', PROVINCES:'provinces', HOW:'how', SETTINGS:'settings', PLAYING:'playing', PAUSED:'paused', COUNTDOWN:'countdown', GAMEOVER:'gameover' };
+let state = GameState.MENU;
+
+/* ================= 34 PROVINSI ================= */
+const PROVINCES = [
+  {id:'aceh',name:'Aceh',region:'Sumatera',theme:'aceh',desc:'Serambi Mekkah & Masjid Raya Baiturrahman',fact:'Aceh dikenal sebagai "Serambi Mekkah" karena menjadi pintu masuk Islam pertama di Indonesia. Masjid Raya Baiturrahman berdiri kokoh sejak abad ke-17 dan selamat dari tsunami 2004.'},
+  {id:'sumut',name:'Sumatera Utara',region:'Sumatera',theme:'sumut',desc:'Danau Toba & rumah adat Batak',fact:'Danau Toba adalah danau vulkanik terbesar di dunia, terbentuk dari letusan supervolcano 74.000 tahun lalu. Di tengahnya ada Pulau Samosir — pulau dalam pulau.'},
+  {id:'sumbar',name:'Sumatera Barat',region:'Sumatera',theme:'sumbar',desc:'Rumah Gadang & budaya Minangkabau',fact:'Sumatera Barat satu-satunya provinsi di Indonesia yang menganut sistem matrilineal. Rumah Gadang dengan atap melengkung seperti tanduk kerbau menjadi ikon budaya Minangkabau.'},
+  {id:'riau',name:'Riau',region:'Sumatera',theme:'riau',desc:'Sungai Siak & hutan tropis',fact:'Riau memiliki Sungai Siak, sungai terdalam di Indonesia dengan kedalaman mencapai 30 meter. Provinsi ini juga pusat kebudayaan Melayu di Sumatera.'},
+  {id:'kepri',name:'Kepulauan Riau',region:'Sumatera',theme:'kepri',desc:'Gugusan pulau di Selat Malaka',fact:'Kepulauan Riau terdiri dari 2.408 pulau — 96% di antaranya belum berpenghuni. Terletak di jalur pelayaran internasional Selat Malaka.'},
+  {id:'jambi',name:'Jambi',region:'Sumatera',theme:'jambi',desc:'Candi Muaro Jambi & Sungai Batanghari',fact:'Jambi memiliki Candi Muaro Jambi, kompleks candi Buddha terluas di Asia Tenggara. Luasnya 12 km persegi dan diperkirakan pusat pendidikan Buddha abad ke-7 hingga ke-12.'},
+  {id:'sumsel',name:'Sumatera Selatan',region:'Sumatera',theme:'sumsel',desc:'Jembatan Ampera & Sungai Musi',fact:'Jembatan Ampera di Palembang adalah ikon provinsi ini. Bagian tengah jembatan pernah bisa diangkat untuk kapal besar melintas — meski saat ini sudah tidak aktif.'},
+  {id:'babel',name:'Bangka Belitung',region:'Sumatera',theme:'babel',desc:'Pantai granit & pulau Laskar Pelangi',fact:'Bangka Belitung punya pantai dengan batu granit raksasa seperti Pantai Tanjung Tinggi. Pulau Belitung terkenal lewat novel dan film "Laskar Pelangi".'},
+  {id:'bengkulu',name:'Bengkulu',region:'Sumatera',theme:'bengkulu',desc:'Rafflesia Arnoldii & pantai panjang',fact:'Bengkulu adalah tempat pertama kali bunga Rafflesia Arnoldii ditemukan oleh Sir Stamford Raffles pada 1818. Bunga ini terbesar di dunia dengan diameter mencapai 1 meter.'},
+  {id:'lampung',name:'Lampung',region:'Sumatera',theme:'lampung',desc:'Gunung Krakatau & gajah Sumatra',fact:'Lampung dikenal dengan Gunung Krakatau. Letusannya pada 1883 menjadi salah satu yang paling dahsyat dalam sejarah — suaranya terdengar hingga Australia.'},
+  {id:'jakarta',name:'DKI Jakarta',region:'Jawa',theme:'jakarta',desc:'Monas & gedung pencakar langit',fact:'Jakarta adalah kota terpadat di Indonesia dan pernah menjadi pusat ekonomi Asia Tenggara. Menara Monas setinggi 132 meter dihiasi lidah api berlapis emas 35 kilogram pemberian Jepang.'},
+  {id:'jabar',name:'Jawa Barat',region:'Jawa',theme:'jabar',desc:'Gunung & kebun teh hijau',fact:'Jawa Barat dijuluki "Paris van Java" sejak zaman kolonial karena udaranya sejuk. Di sini terdapat Gunung Tangkuban Perahu yang legendaris dengan kawah aktifnya.'},
+  {id:'jateng',name:'Jawa Tengah',region:'Jawa',theme:'jateng',desc:'Candi Borobudur & Prambanan',fact:'Jawa Tengah adalah rumah bagi Candi Borobudur — candi Buddha terbesar di dunia dan Situs Warisan Dunia UNESCO. Terdiri dari 2.672 panel relief dan 504 arca Buddha.'},
+  {id:'diy',name:'DI Yogyakarta',region:'Jawa',theme:'diy',desc:'Kraton & Malioboro',fact:'Yogyakarta satu-satunya provinsi di Indonesia yang dipimpin oleh Sultan. Keraton Yogyakarta masih aktif hingga kini sebagai pusat kebudayaan Jawa.'},
+  {id:'jatim',name:'Jawa Timur',region:'Jawa',theme:'jatim',desc:'Gunung Bromo & Tumpak Sewu',fact:'Jawa Timur punya Gunung Bromo dengan lautan pasir 10 km — wisata sunrise paling ikonik di Indonesia. Juga ada Air Terjun Tumpak Sewu yang dijuluki "Niagara-nya Indonesia".'},
+  {id:'banten',name:'Banten',region:'Jawa',theme:'banten',desc:'Masjid Agung & suku Baduy',fact:'Banten memiliki suku Baduy yang menolak modernitas dan hidup tradisional di pedalaman. Mereka menjaga keseimbangan alam sebagai bagian dari ajaran leluhur.'},
+  {id:'bali',name:'Bali',region:'Bali & Nusa Tenggara',theme:'bali',desc:'Pura & sawah terasering',fact:'Bali dijuluki "Pulau Dewata". Sawah terasering Jatiluwih adalah Situs Warisan Dunia UNESCO dengan sistem irigasi Subak yang berusia lebih dari 1.000 tahun.'},
+  {id:'ntb',name:'Nusa Tenggara Barat',region:'Bali & Nusa Tenggara',theme:'ntb',desc:'Gunung Rinjani & pantai eksotis',fact:'NTB memiliki Gunung Rinjani setinggi 3.726 mdpl — gunung berapi tertinggi kedua di Indonesia. Di puncaknya terdapat Danau Segara Anak berwarna biru toska.'},
+  {id:'ntt',name:'Nusa Tenggara Timur',region:'Bali & Nusa Tenggara',theme:'ntt',desc:'Komodo & Danau Kelimutu',fact:'NTT adalah rumah Komodo, kadal terbesar di dunia yang hanya hidup di Pulau Komodo, Rinca, dan Flores. Danau Kelimutu memiliki tiga kawah dengan warna air berbeda.'},
+  {id:'kalbar',name:'Kalimantan Barat',region:'Kalimantan',theme:'kalbar',desc:'Sungai Kapuas & hutan tropis',fact:'Kalimantan Barat punya Sungai Kapuas, sungai terpanjang di Indonesia dengan panjang 1.143 km. Sungai ini menjadi urat nadi kehidupan masyarakat Dayak dan Melayu.'},
+  {id:'kalteng',name:'Kalimantan Tengah',region:'Kalimantan',theme:'kalteng',desc:'Hutan hujan & orangutan',fact:'Kalimantan Tengah adalah rumah Taman Nasional Tanjung Puting, pusat konservasi orangutan terbesar di dunia. Hutan hujan tropisnya berusia lebih dari 130 juta tahun.'},
+  {id:'kalsel',name:'Kalimantan Selatan',region:'Kalimantan',theme:'kalsel',desc:'Pasar terapung & Sungai Martapura',fact:'Kalimantan Selatan terkenal dengan Pasar Terapung Muara Kuin — pasar tradisional di atas perahu yang sudah berjalan sejak abad ke-16. Aktivitasnya dimulai sebelum matahari terbit.'},
+  {id:'kaltim',name:'Kalimantan Timur',region:'Kalimantan',theme:'kaltim',desc:'Hutan hujan & kekayaan alam',fact:'Kalimantan Timur menjadi lokasi Ibu Kota Negara baru Indonesia, Nusantara. Provinsi ini juga kaya akan hutan hujan tropis dan tambang batu bara.'},
+  {id:'kaltara',name:'Kalimantan Utara',region:'Kalimantan',theme:'kaltara',desc:'Hutan perbatasan & suku Dayak',fact:'Kalimantan Utara adalah provinsi termuda di Kalimantan (dibentuk 2012) dan berbatasan langsung dengan Malaysia. Hutannya jadi habitat bekantan dan orangutan.'},
+  {id:'sulut',name:'Sulawesi Utara',region:'Sulawesi',theme:'sulut',desc:'Gunung Lokon & Bunaken',fact:'Sulawesi Utara punya Taman Laut Bunaken dengan 390 spesies karang — salah satu keanekaragaman laut tertinggi di dunia. Ini juga tempat diving terbaik di Indonesia.'},
+  {id:'sulteng',name:'Sulawesi Tengah',region:'Sulawesi',theme:'sulteng',desc:'Danau Poso & kerajinan tenun',fact:'Sulawesi Tengah memiliki Danau Poso, danau terbesar ketiga di Indonesia. Danau ini menyimpan misteri ikan sidat raksasa berukuran hingga 2 meter.'},
+  {id:'sulsel',name:'Sulawesi Selatan',region:'Sulawesi',theme:'sulsel',desc:'Rumah Tongkonan & kapal Phinisi',fact:'Sulawesi Selatan adalah tanah Bugis-Makassar, pembuat kapal Phinisi yang menjelajahi samudera sejak abad ke-14. Rumah Tongkonan jadi ikon budaya Toraja.'},
+  {id:'sultra',name:'Sulawesi Tenggara',region:'Sulawesi',theme:'sultra',desc:'Pulau Wakatobi & keindahan bawah laut',fact:'Sulawesi Tenggara memiliki Wakatobi, taman bawah laut yang menjadi Situs Warisan Dunia UNESCO. Nama Wakatobi singkatan dari empat pulau: Wangi-Wangi, Kaledupa, Tomia, Binongko.'},
+  {id:'gorontalo',name:'Gorontalo',region:'Sulawesi',theme:'gorontalo',desc:'Benteng Otanaha & Danau Limboto',fact:'Gorontalo dikenal sebagai "Kota Serambi Madinah" karena kuatnya budaya Islam. Benteng Otanaha berdiri sejak abad ke-15 sebagai saksi perlawanan rakyat Gorontalo.'},
+  {id:'sulbar',name:'Sulawesi Barat',region:'Sulawesi',theme:'sulbar',desc:'Pegunungan & suku Mandar',fact:'Sulawesi Barat adalah rumah suku Mandar, pelaut ulung yang menjadi asal tradisi "Sandeq" — pelayaran dengan perahu bercadik khas Mandar.'},
+  {id:'maluku',name:'Maluku',region:'Maluku & Papua',theme:'maluku',desc:'Pulau rempah & Laut Banda',fact:'Maluku dijuluki "Kepulauan Rempah" karena satu-satunya sumber pala dan cengkeh dunia selama berabad-abad. Bangsa Eropa rela berlayar jauh hanya untuk rempah dari kepulauan ini.'},
+  {id:'malut',name:'Maluku Utara',region:'Maluku & Papua',theme:'malut',desc:'Gunung Gamalama & Kesultanan Ternate',fact:'Maluku Utara punya Gunung Gamalama di Ternate yang masih aktif. Kesultanan Ternate adalah salah satu kerajaan Islam tertua di Indonesia sejak abad ke-13.'},
+  {id:'papua',name:'Papua',region:'Maluku & Papua',theme:'papua',desc:'Pegunungan Jayawijaya & Cendrawasih',fact:'Papua memiliki Puncak Jaya setinggi 4.884 mdpl — satu-satunya tempat di Indonesia dengan salju abadi. Papua juga habitat burung Cendrawasih "Bird of Paradise".'},
+  {id:'papbar',name:'Papua Barat',region:'Maluku & Papua',theme:'papbar',desc:'Raja Ampat & keanekaragaman laut',fact:'Papua Barat punya Raja Ampat, kepulauan dengan 1.500 pulau kecil dan keanekaragaman laut terkaya di dunia — 75% spesies karang dunia ada di sini.'}
+];
+
+let selectedProvince = PROVINCES.find(p => p.id === 'jabar');
+let activeRegion = 'Semua';
+
+const KITES = [
+  {id:0,name:'Tradisional',desc:'Klasik & seimbang',body:'#e53935',accent:'#ffd54f',type:'diamond'},
+  {id:1,name:'Kupu-Kupu',desc:'Lincah & indah',body:'#ab47bc',accent:'#ff80ab',type:'butterfly'},
+  {id:2,name:'Burung',desc:'Cepat & gesit',body:'#29b6f6',accent:'#fff176',type:'bird'},
+  {id:3,name:'Naga',desc:'Besar & kuat',body:'#43a047',accent:'#ff7043',type:'dragon'}
+];
+let selectedKite = 0;
+
+let player, obstacles, collectibles, particles, clouds;
+let score, coins, starsCollected, lives, level, levelTarget;
+let keys = {}, touchDir = { up:false, down:false, left:false, right:false };
+let lastTime = 0, spawnTimer = 0, collectTimer = 0, cloudTimer = 0;
+let levelNotifTimer = 0, invincibleTimer = 0, gameTime = 0;
+let floatingTexts = [];
+let showFactEnabled = true;
+let gamePausedByFact = false;
+
+/* ================= MUSIK: CUBLAK-CUBLAK SUWENG ================= */
+const Music = {
+  ctx:null, masterGain:null, playing:false, muted:false, schedulerTimer:null, nextNoteTime:0, step:0, bpm:120,
+  // Melodi Cublak-Cublak Suweng (lagu daerah Jawa)
+  melody:[
+    // Bar 1: "Cublak-cublak suweng"
+    {n:'G5',d:1},{n:'E5',d:1},{n:'D5',d:1},{n:'C5',d:1},
+    {n:'D5',d:1},{n:'E5',d:1},{n:'G5',d:1},{n:'E5',d:1},
+    {n:'D5',d:2},{n:'C5',d:2},
+    // Bar 2: "Suwenge ting gelenter"
+    {n:'D5',d:1},{n:'E5',d:1},{n:'G5',d:1},{n:'E5',d:1},
+    {n:'D5',d:1},{n:'C5',d:1},{n:'D5',d:2},
+    // Bar 3: "Mambu ketundhung gudel"
+    {n:'G5',d:1},{n:'A5',d:1},{n:'G5',d:1},{n:'E5',d:1},
+    {n:'D5',d:1},{n:'E5',d:1},{n:'G5',d:2},
+    // Bar 4: "Pak empo lera-lere"
+    {n:'G5',d:1},{n:'E5',d:1},{n:'D5',d:1},{n:'C5',d:1},
+    {n:'D5',d:1},{n:'E5',d:1},{n:'G5',d:2},
+    // Bar 5: "Sopo ngguyu ndelikake"
+    {n:'A5',d:1},{n:'G5',d:1},{n:'A5',d:1},{n:'G5',d:1},
+    {n:'E5',d:1},{n:'D5',d:1},{n:'C5',d:2},
+    // Bar 6: "Sir sir pong dele kopong"
+    {n:'D5',d:1},{n:'E5',d:1},{n:'G5',d:1},{n:'E5',d:1},
+    {n:'D5',d:1},{n:'C5',d:1},{n:'D5',d:2},
+    // Bar 7: "Sir sir pong dele kopong" (penutup)
+    {n:'D5',d:1},{n:'E5',d:1},{n:'G5',d:1},{n:'E5',d:1},
+    {n:'D5',d:1},{n:'C5',d:1},{n:'C5',d:3},
+    {n:'REST',d:1}
+  ],
+  // Bass sederhana mengikuti akor lagu Jawa
+  bass:[
+    {n:'C3',d:4},{n:'G2',d:4},{n:'C3',d:4},{n:'G2',d:4},
+    {n:'A2',d:4},{n:'G2',d:4},{n:'C3',d:4},{n:'G2',d:4},
+    {n:'C3',d:4},{n:'G2',d:4},{n:'F2',d:4},{n:'G2',d:4},
+    {n:'C3',d:4},{n:'G2',d:4},{n:'C3',d:4},{n:'C3',d:4}
+  ],
+  noteFreq:{'C3':130.81,'D3':146.83,'E3':164.81,'F3':174.61,'G3':196.00,'A3':220.00,'B3':246.94,'C4':261.63,'D4':293.66,'E4':329.63,'F4':349.23,'G4':392.00,'A4':440.00,'B4':493.88,'C5':523.25,'D5':587.33,'E5':659.25,'F5':698.46,'G5':783.99,'A5':880.00,'B5':987.77,'C6':1046.50},
+  init(){ if(this.ctx) return; try { this.ctx = new (window.AudioContext||window.webkitAudioContext)(); this.masterGain = this.ctx.createGain(); this.masterGain.gain.value = 0.18; this.masterGain.connect(this.ctx.destination); } catch(e){} },
+  playNote(freq,time,duration,type='sine',vol=0.5){ if(!this.ctx) return; const osc=this.ctx.createOscillator(),gain=this.ctx.createGain(); osc.type=type; osc.frequency.value=freq; gain.gain.setValueAtTime(0,time); gain.gain.linearRampToValueAtTime(vol,time+0.01); gain.gain.setValueAtTime(vol,time+duration-0.15); gain.gain.linearRampToValueAtTime(0,time+duration); osc.connect(gain); gain.connect(this.masterGain); osc.start(time); osc.stop(time+duration+0.05); },
+  playSoft(freq,time,duration,vol=0.3){ if(!this.ctx) return; const osc=this.ctx.createOscillator(),gain=this.ctx.createGain(),filter=this.ctx.createBiquadFilter(); filter.type='lowpass'; filter.frequency.value=600; osc.type='triangle'; osc.frequency.value=freq; gain.gain.setValueAtTime(0,time); gain.gain.linearRampToValueAtTime(vol,time+0.02); gain.gain.linearRampToValueAtTime(0,time+duration); osc.connect(filter); filter.connect(gain); gain.connect(this.masterGain); osc.start(time); osc.stop(time+duration+0.05); },
+  schedule(){ const spb = 60.0/this.bpm/2; while(this.nextNoteTime < this.ctx.currentTime+0.15){
+      const mel = this.melody[this.step%this.melody.length];
+      if(mel.n !== 'REST'){
+        const freq = this.noteFreq[mel.n];
+        if(freq){
+          const dur = mel.d*spb*0.9;
+          // Melodi utama: pakai instrumen "suling" (sine wave lembut, seperti seruling bambu)
+          this.playNote(freq,this.nextNoteTime,dur,'sine',0.42);
+          // Echo lembut satu oktaf atas (seperti gema di kejauhan)
+          this.playNote(freq*2,this.nextNoteTime+0.01,dur*0.7,'triangle',0.1);
+        }
+      }
+      if(this.step%4===0){
+        const bn = this.bass[Math.floor(this.step/4)%this.bass.length];
+        const f = this.noteFreq[bn.n];
+        if(f) this.playSoft(f,this.nextNoteTime,spb*3.5,0.4);
+      }
+      // Ketuk gamelan/kendang ringan (bunyi pendek, lembut)
+      if(this.step%2===1){
+        this.playNote(7000+Math.random()*1000,this.nextNoteTime,0.02,'triangle',0.04);
+      }
+      this.nextNoteTime += spb; this.step++;
+    }
+    this.schedulerTimer = setTimeout(()=>this.schedule(),25); },
+  start(){ this.init(); if(!this.ctx || this.playing || this.muted) return; if(this.ctx.state==='suspended') this.ctx.resume(); this.playing=true; this.nextNoteTime=this.ctx.currentTime+0.1; this.schedule(); },
+  stop(){ this.playing=false; if(this.schedulerTimer){ clearTimeout(this.schedulerTimer); this.schedulerTimer=null; } },
+  setEnabled(enabled){ this.muted = !enabled; if(this.muted){ this.stop(); if(this.masterGain) this.masterGain.gain.value=0; } else { if(this.masterGain) this.masterGain.gain.value=0.18; this.start(); } }
+};
+
+/* ================= SFX ================= */
+const SFX = {
+  ctx:null, gain:null, muted:false,
+  init(){ if(this.ctx) return; try { this.ctx = new (window.AudioContext||window.webkitAudioContext)(); this.gain = this.ctx.createGain(); this.gain.gain.value = 0.35; this.gain.connect(this.ctx.destination); } catch(e){} },
+  resume(){ if(this.ctx && this.ctx.state==='suspended') this.ctx.resume(); },
+  tone(freq,duration,type='sine',vol=0.5,startDelay=0){ if(!this.ctx || this.muted) return; const now = this.ctx.currentTime+startDelay; const osc = this.ctx.createOscillator(), g = this.ctx.createGain(); osc.type=type; osc.frequency.value=freq; g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(vol,now+0.008); g.gain.exponentialRampToValueAtTime(0.001,now+duration); osc.connect(g); g.connect(this.gain); osc.start(now); osc.stop(now+duration+0.02); },
+  sweep(f1,f2,duration,type='sine',vol=0.4){ if(!this.ctx || this.muted) return; const now=this.ctx.currentTime; const osc=this.ctx.createOscillator(),g=this.ctx.createGain(); osc.type=type; osc.frequency.setValueAtTime(f1,now); osc.frequency.exponentialRampToValueAtTime(f2,now+duration); g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(vol,now+0.01); g.gain.exponentialRampToValueAtTime(0.001,now+duration); osc.connect(g); g.connect(this.gain); osc.start(now); osc.stop(now+duration+0.02); },
+  click(){ this.resume(); this.tone(880,0.06,'square',0.25); this.tone(1320,0.08,'square',0.15,0.03); },
+  hover(){ this.resume(); this.tone(1200,0.04,'sine',0.08); },
+  back(){ this.resume(); this.tone(660,0.08,'square',0.2); this.tone(440,0.1,'square',0.15,0.05); },
+  start(){ this.resume(); [523.25,659.25,783.99,1046.50].forEach((f,i)=>this.tone(f,0.15,'square',0.3,i*0.07)); },
+  select(){ this.resume(); this.tone(1046.50,0.08,'sine',0.3); this.tone(1568.00,0.12,'sine',0.2,0.05); },
+  pause(){ this.resume(); this.tone(440,0.12,'triangle',0.3); this.tone(330,0.15,'triangle',0.25,0.08); },
+  resumeSound(){ this.resume(); this.tone(440,0.1,'square',0.25); this.tone(660,0.12,'square',0.25,0.06); this.tone(880,0.15,'square',0.2,0.12); },
+  tick(){ this.resume(); this.tone(880,0.1,'sine',0.3); },
+  go(){ this.resume(); this.tone(1320,0.2,'square',0.35); this.tone(1760,0.25,'sine',0.25,0.05); },
+  star(){ this.resume(); this.tone(1318.51,0.08,'sine',0.3); this.tone(1760,0.12,'sine',0.25,0.05); },
+  coin(){ this.resume(); this.tone(987.77,0.06,'square',0.25); this.tone(1318.51,0.1,'square',0.2,0.05); },
+  hit(){ this.resume(); this.sweep(300,100,0.3,'sawtooth',0.4); },
+  gameover(){ this.resume(); [523.25,466.16,415.30,349.23].forEach((f,i)=>this.tone(f,0.25,'triangle',0.35,i*0.18)); },
+  levelup(){ this.resume(); [659.25,783.99,987.77,1318.51].forEach((f,i)=>this.tone(f,0.12,'square',0.3,i*0.06)); },
+  setEnabled(enabled){ this.muted = !enabled; }
+};
+
+function unlockAudioOnce(){ SFX.init(); SFX.resume(); if(!Music.muted) Music.start(); document.removeEventListener('click',unlockAudioOnce); document.removeEventListener('touchstart',unlockAudioOnce); document.removeEventListener('keydown',unlockAudioOnce); }
+document.addEventListener('click',unlockAudioOnce);
+document.addEventListener('touchstart',unlockAudioOnce);
+document.addEventListener('keydown',unlockAudioOnce);
+
+/* =========================================================
+   BACKGROUND PROSEDURAL
+   ========================================================= */
+function drawSkyGradient(c, colors) {
+  const g = c.createLinearGradient(0,0,0,H);
+  colors.forEach((col,i)=>g.addColorStop(i/(colors.length-1), col));
+  c.fillStyle = g; c.fillRect(0,0,W,H);
+}
+function drawSun(c, x, y, r, color='#fff9c4', glowColor='#ffe082') {
+  const sg = c.createRadialGradient(x,y,r*0.15,x,y,r);
+  sg.addColorStop(0,color); sg.addColorStop(0.5,glowColor); sg.addColorStop(1,'rgba(255,224,130,0)');
+  c.fillStyle = sg; c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fill();
+}
+function drawMountain(c, cx, cy, w, h, color, snow=false) {
+  c.fillStyle = color;
+  c.beginPath();
+  c.moveTo(cx-w, cy); c.lineTo(cx, cy-h); c.lineTo(cx+w, cy);
+  c.closePath(); c.fill();
+  if (snow) {
+    c.fillStyle = 'rgba(255,255,255,0.9)';
+    c.beginPath();
+    c.moveTo(cx-w*0.28, cy-h*0.72); c.lineTo(cx, cy-h); c.lineTo(cx+w*0.28, cy-h*0.72);
+    c.lineTo(cx+w*0.15, cy-h*0.78); c.lineTo(cx, cy-h*0.85); c.lineTo(cx-w*0.15, cy-h*0.78);
+    c.closePath(); c.fill();
+  }
+}
+function drawBuilding(c, x, y, w, h, color, windows=true) {
+  c.fillStyle = color; c.fillRect(x, y-h, w, h);
+  if (windows) {
+    c.fillStyle = 'rgba(255,235,150,0.85)';
+    const cols = Math.max(2, Math.floor(w/12));
+    const rows = Math.max(2, Math.floor(h/14));
+    const ww = (w-8)/cols, wh = (h-8)/rows;
+    for (let i=0;i<cols;i++) for (let j=0;j<rows;j++) {
+      if (Math.random() < 0.85) c.fillRect(x+4+i*ww+1, y-h+4+j*wh+1, ww-2, wh-2);
+    }
+  }
+}
+function drawPalmTree(c, x, y, size) {
+  c.fillStyle = '#5d4037'; c.fillRect(x-2, y-size, 4, size);
+  c.fillStyle = '#2e7d32';
+  for (let i=0;i<5;i++) {
+    const a = (i/5)*Math.PI*2 - Math.PI/2;
+    c.beginPath();
+    c.moveTo(x, y-size);
+    c.quadraticCurveTo(x+Math.cos(a)*size*0.5, y-size+Math.sin(a)*size*0.3-5, x+Math.cos(a)*size*0.7, y-size+Math.sin(a)*size*0.4+5);
+    c.quadraticCurveTo(x+Math.cos(a)*size*0.5, y-size+Math.sin(a)*size*0.3+8, x, y-size);
+    c.fill();
+  }
+}
+function drawPineTree(c, x, y, size, color='#2e5d3a') {
+  c.fillStyle = '#4e342e'; c.fillRect(x-2, y-size*0.2, 4, size*0.2);
+  c.fillStyle = color;
+  for (let i=0;i<3;i++) {
+    const top = y - size + i*size*0.25;
+    const w = size * (0.5 + i*0.15);
+    c.beginPath(); c.moveTo(x-w, top+size*0.35); c.lineTo(x, top); c.lineTo(x+w, top+size*0.35);
+    c.closePath(); c.fill();
+  }
+}
+function drawRiceTerrace(c, y0, levels, color1, color2) {
+  for (let i=0;i<levels;i++) {
+    const y = y0 + i*10;
+    c.fillStyle = i%2===0 ? color1 : color2;
+    c.beginPath(); c.moveTo(0,y);
+    for (let x=0;x<=W;x+=20) { const wave = Math.sin((x+i*30)*0.008)*6; c.lineTo(x, y+wave+i*3); }
+    c.lineTo(W,H); c.lineTo(0,H); c.closePath(); c.fill();
+  }
+}
+function drawBorobudur(c, cx, cy, scale) {
+  const base = scale;
+  c.fillStyle = '#8d8571'; c.fillRect(cx-base, cy-base*0.25, base*2, base*0.3);
+  c.fillStyle = '#a09680'; c.fillRect(cx-base*0.85, cy-base*0.5, base*1.7, base*0.25);
+  c.fillStyle = '#b8ae96'; c.fillRect(cx-base*0.7, cy-base*0.7, base*1.4, base*0.2);
+  c.fillStyle = '#c8bda1'; c.beginPath(); c.arc(cx, cy-base*0.75, base*0.35, Math.PI, 0); c.fill();
+  c.fillStyle = '#d8cdb1'; c.beginPath(); c.arc(cx, cy-base*0.9, base*0.15, Math.PI, 0); c.fill();
+  for (let i=-2;i<=2;i++) { if (i===0) continue;
+    c.fillStyle = '#c8bda1'; c.beginPath(); c.arc(cx+i*base*0.35, cy-base*0.55, base*0.15, Math.PI, 0); c.fill();
+  }
+}
+function drawPura(c, cx, cy, size) {
+  c.fillStyle = '#8d6e63'; c.fillRect(cx-size*0.6, cy-size*0.15, size*1.2, size*0.15);
+  const tiers = 7;
+  for (let i=0;i<tiers;i++) {
+    const w = size * (0.75 - i*0.08);
+    const y = cy - size*0.15 - (i+1)*size*0.12;
+    c.fillStyle = i%2===0 ? '#3e2723' : '#5d4037';
+    c.beginPath(); c.moveTo(cx-w, y+size*0.12); c.lineTo(cx, y); c.lineTo(cx+w, y+size*0.12);
+    c.closePath(); c.fill();
+  }
+  c.fillStyle = '#ffd54f';
+  c.beginPath(); c.arc(cx, cy - size*0.15 - tiers*size*0.12 - size*0.04, size*0.06, 0, Math.PI*2); c.fill();
+}
+function drawRumahGadang(c, cx, cy, size) {
+  c.fillStyle = '#5d4037';
+  c.beginPath();
+  c.moveTo(cx-size*1.3, cy-size*0.05);
+  c.quadraticCurveTo(cx-size*1.4, cy-size*0.8, cx-size*0.9, cy-size*0.6);
+  c.lineTo(cx-size*0.3, cy-size*0.85); c.lineTo(cx, cy-size*0.65);
+  c.lineTo(cx+size*0.3, cy-size*0.85); c.lineTo(cx+size*0.9, cy-size*0.6);
+  c.quadraticCurveTo(cx+size*1.4, cy-size*0.8, cx+size*1.3, cy-size*0.05);
+  c.closePath(); c.fill();
+  c.fillStyle = '#6d4c41'; c.fillRect(cx-size, cy-size*0.05, size*2, size*0.6);
+  c.fillStyle = '#a1887f';
+  for (let i=-3;i<=3;i++) c.fillRect(cx+i*size*0.22 - 2, cy, 4, size*0.4);
+}
+function drawRumahTongkonan(c, cx, cy, size) {
+  c.fillStyle = '#3e2723';
+  c.beginPath();
+  c.moveTo(cx-size*1.3, cy-size*0.2);
+  c.quadraticCurveTo(cx-size*0.5, cy-size*1.1, cx, cy-size*0.7);
+  c.quadraticCurveTo(cx+size*0.5, cy-size*1.1, cx+size*1.3, cy-size*0.2);
+  c.lineTo(cx+size, cy-size*0.15);
+  c.quadraticCurveTo(cx+size*0.4, cy-size*0.9, cx, cy-size*0.55);
+  c.quadraticCurveTo(cx-size*0.4, cy-size*0.9, cx-size, cy-size*0.15);
+  c.closePath(); c.fill();
+  c.fillStyle = '#8d6e63'; c.fillRect(cx-size, cy-size*0.15, size*2, size*0.65);
+  c.fillStyle = '#5d4037';
+  for (let i=-2;i<=2;i++) c.fillRect(cx+i*size*0.35 - 2, cy, 4, size*0.5);
+}
+function drawMonas(c, cx, cy, size) {
+  c.fillStyle = '#e0e0e0'; c.fillRect(cx-size*0.15, cy-size*1.5, size*0.3, size*1.5);
+  c.fillStyle = '#c0c0c0'; c.fillRect(cx-size*0.3, cy-size*1.7, size*0.6, size*0.2);
+  c.fillRect(cx-size*0.25, cy-size*1.9, size*0.5, size*0.2);
+  c.fillStyle = '#ffd54f';
+  c.beginPath(); c.moveTo(cx, cy-size*2.3); c.lineTo(cx-size*0.15, cy-size*1.9); c.lineTo(cx+size*0.15, cy-size*1.9);
+  c.closePath(); c.fill();
+  c.fillStyle = '#9e9e9e'; c.fillRect(cx-size*0.4, cy-size*0.15, size*0.8, size*0.15);
+}
+function drawMasjid(c, cx, cy, size, domeColor='#fff') {
+  c.fillStyle = domeColor;
+  c.beginPath(); c.arc(cx, cy-size*0.3, size*0.4, Math.PI, 0); c.fill();
+  c.fillRect(cx-size*0.4, cy-size*0.3, size*0.8, size*0.35);
+  c.fillStyle = '#fafafa';
+  c.fillRect(cx-size*0.75, cy-size*1.0, size*0.15, size*1.05);
+  c.fillRect(cx+size*0.6, cy-size*1.0, size*0.15, size*1.05);
+  c.fillStyle = domeColor;
+  c.beginPath(); c.arc(cx-size*0.675, cy-size*1.0, size*0.1, Math.PI, 0); c.fill();
+  c.beginPath(); c.arc(cx+size*0.675, cy-size*1.0, size*0.1, Math.PI, 0); c.fill();
+  c.fillStyle = '#eceff1'; c.fillRect(cx-size*0.85, cy-size*0.05, size*1.7, size*0.15);
+}
+function drawCandi(c, cx, cy, size) {
+  const tiers = 4;
+  c.fillStyle = '#5d4037'; c.fillRect(cx-size*0.5, cy-size*0.1, size, size*0.15);
+  for (let i=0;i<tiers;i++) {
+    const w = size * (0.45 - i*0.08);
+    const y = cy - size*0.1 - (i+1)*size*0.18;
+    c.fillStyle = i%2===0 ? '#6d4c41' : '#8d6e63';
+    c.fillRect(cx-w, y, w*2, size*0.18);
+  }
+  c.fillStyle = '#a1887f';
+  c.beginPath();
+  c.moveTo(cx-size*0.1, cy-size*0.1 - tiers*size*0.18);
+  c.lineTo(cx, cy-size*0.1 - tiers*size*0.18 - size*0.2);
+  c.lineTo(cx+size*0.1, cy-size*0.1 - tiers*size*0.18);
+  c.closePath(); c.fill();
+}
+function drawCloudBg(c, x, y, size, alpha) {
+  c.save(); c.globalAlpha = alpha; c.fillStyle = '#fff';
+  c.beginPath();
+  c.arc(x, y, size*0.5, 0, Math.PI*2);
+  c.arc(x+size*0.45, y-size*0.2, size*0.4, 0, Math.PI*2);
+  c.arc(x+size*0.85, y, size*0.45, 0, Math.PI*2);
+  c.fill(); c.restore();
+}
+
+function drawBackgroundByTheme(theme) {
+  const c = ctx;
+  c.setTransform(1,0,0,1,0,0);
+  c.clearRect(0,0,W,H);
+
+  switch(theme) {
+    case 'aceh': {
+      drawSkyGradient(c, ['#1a237e','#4a148c','#e65100','#ff9800']);
+      drawSun(c, W*0.75, H*0.55, 80, '#fff59d', '#ffb74d');
+      c.fillStyle = 'rgba(13,71,161,0.7)';
+      c.beginPath(); c.moveTo(0, H*0.72);
+      for (let x=0;x<=W;x+=30) c.lineTo(x, H*0.72 + Math.sin(x*0.02)*8);
+      c.lineTo(W,H); c.lineTo(0,H); c.closePath(); c.fill();
+      c.fillStyle = 'rgba(21,101,192,0.8)';
+      c.beginPath(); c.moveTo(0, H*0.82);
+      for (let x=0;x<=W;x+=30) c.lineTo(x, H*0.82 + Math.sin(x*0.025+2)*6);
+      c.lineTo(W,H); c.lineTo(0,H); c.closePath(); c.fill();
+      drawMasjid(c, W*0.5, H*0.78, 70, '#f5f5f5');
+      break;
+    }
+    case 'sumut': {
+      drawSkyGradient(c, ['#42a5f5','#81d4fa','#b3e5fc']);
+      drawSun(c, W*0.85, H*0.15, 50);
+      drawMountain(c, W*0.15, H*0.55, 200, 150, '#455a64');
+      drawMountain(c, W*0.5, H*0.55, 250, 200, '#37474f');
+      drawMountain(c, W*0.85, H*0.55, 220, 170, '#546e7a');
+      c.fillStyle = '#1976d2'; c.fillRect(0, H*0.6, W, H*0.4);
+      c.fillStyle = 'rgba(255,255,255,0.3)';
+      for (let i=0;i<8;i++) c.fillRect(0, H*0.65+i*15, W, 1);
+      c.fillStyle = '#5d4037';
+      c.beginPath();
+      c.moveTo(W*0.2-50, H*0.72);
+      c.quadraticCurveTo(W*0.2-70, H*0.55, W*0.2-30, H*0.6);
+      c.lineTo(W*0.2, H*0.5); c.lineTo(W*0.2+30, H*0.6);
+      c.quadraticCurveTo(W*0.2+70, H*0.55, W*0.2+50, H*0.72);
+      c.closePath(); c.fill();
+      break;
+    }
+    case 'sumbar': {
+      drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']);
+      drawSun(c, W*0.85, H*0.15, 55);
+      drawMountain(c, W*0.2, H*0.75, 250, 180, '#616161');
+      drawMountain(c, W*0.7, H*0.75, 300, 220, '#424242');
+      drawRiceTerrace(c, H*0.78, 4, '#2e7d32', '#388e3c');
+      drawRumahGadang(c, W*0.5, H*0.85, 60);
+      break;
+    }
+    case 'riau': {
+      drawSkyGradient(c, ['#64b5f6','#bbdefb','#e3f2fd']);
+      drawSun(c, W*0.15, H*0.15, 45);
+      for (let i=0;i<6;i++) drawPineTree(c, W*0.1 + i*W*0.15, H*0.62, 70, '#2e5d3a');
+      c.fillStyle = '#0277bd';
+      c.beginPath(); c.moveTo(0,H);
+      c.quadraticCurveTo(W*0.3,H*0.7,W*0.5,H*0.75);
+      c.quadraticCurveTo(W*0.7,H*0.8,W,H*0.65);
+      c.lineTo(W,H); c.closePath(); c.fill();
+      break;
+    }
+    case 'kepri': {
+      drawSkyGradient(c, ['#29b6f6','#81d4fa','#b3e5fc']);
+      drawSun(c, W*0.85, H*0.15, 50);
+      [[0.15,0.75,100,40],[0.5,0.8,140,50],[0.8,0.72,90,35]].forEach(([rx,ry,w,h]) => {
+        c.fillStyle = '#8d6e63';
+        c.beginPath(); c.ellipse(W*rx, H*ry, w, h, 0, Math.PI, 0); c.fill();
+        c.fillStyle = '#2e7d32';
+        c.beginPath(); c.ellipse(W*rx, H*ry-10, w*0.9, h*0.5, 0, Math.PI, 0); c.fill();
+      });
+      c.fillStyle = '#0288d1'; c.fillRect(0, H*0.82, W, H*0.18);
+      break;
+    }
+    case 'jambi': {
+      drawSkyGradient(c, ['#4dd0e1','#b2ebf2','#e0f7fa']);
+      drawSun(c, W*0.85, H*0.15, 45);
+      for (let i=0;i<5;i++) drawPineTree(c, W*0.1+i*W*0.2, H*0.62, 60);
+      drawCandi(c, W*0.5, H*0.85, 60);
+      c.fillStyle = '#4e342e'; c.fillRect(0, H*0.95, W, H*0.05);
+      break;
+    }
+    case 'sumsel': {
+      drawSkyGradient(c, ['#42a5f5','#90caf9','#e3f2fd']);
+      drawSun(c, W*0.15, H*0.15, 45);
+      for (let i=0;i<8;i++) drawBuilding(c, i*W/8+10, H*0.65, W/8-20, 60+i*10, '#37474f');
+      c.fillStyle = '#1565c0'; c.fillRect(0, H*0.72, W, H*0.28);
+      c.strokeStyle = '#d32f2f'; c.lineWidth = 6;
+      c.beginPath(); c.moveTo(0,H*0.7); c.lineTo(W,H*0.7); c.stroke();
+      c.lineWidth = 3;
+      for (let i=1;i<5;i++) {
+        c.beginPath(); c.moveTo(W*i/5, H*0.7); c.lineTo(W*i/5, H*0.5); c.stroke();
+      }
+      c.fillStyle = '#b71c1c';
+      c.fillRect(W*0.2-8, H*0.4, 16, H*0.3); c.fillRect(W*0.8-8, H*0.4, 16, H*0.3);
+      break;
+    }
+    case 'babel': {
+      drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']);
+      drawSun(c, W*0.85, H*0.15, 55);
+      c.fillStyle = '#0288d1'; c.fillRect(0, H*0.68, W, H*0.32);
+      c.fillStyle = '#4fc3f7'; c.fillRect(0, H*0.68, W, 6);
+      [[0.2,0.75,60,50],[0.4,0.72,80,60],[0.65,0.78,70,55],[0.85,0.74,90,65]].forEach(([rx,ry,w,h]) => {
+        c.fillStyle = '#616161';
+        c.beginPath(); c.ellipse(W*rx, H*ry, w, h, 0, 0, Math.PI*2); c.fill();
+        c.fillStyle = '#9e9e9e';
+        c.beginPath(); c.ellipse(W*rx-8, H*ry-8, w*0.6, h*0.5, 0, 0, Math.PI*2); c.fill();
+      });
+      drawPalmTree(c, W*0.1, H*0.7, 60);
+      break;
+    }
+    case 'bengkulu': {
+      drawSkyGradient(c, ['#81d4fa','#b3e5fc','#e1f5fe']);
+      drawSun(c, W*0.8, H*0.15, 50);
+      c.fillStyle = '#ffe0b2'; c.fillRect(0, H*0.75, W, H*0.25);
+      c.fillStyle = '#0288d1'; c.fillRect(0, H*0.7, W, H*0.05);
+      c.fillStyle = '#c62828';
+      for (let i=0;i<5;i++) {
+        const a = (i/5)*Math.PI*2;
+        c.beginPath(); c.ellipse(W*0.2+Math.cos(a)*40, H*0.85+Math.sin(a)*25, 45, 30, a, 0, Math.PI*2); c.fill();
+      }
+      c.fillStyle = '#4e342e'; c.beginPath(); c.arc(W*0.2, H*0.85, 25, 0, Math.PI*2); c.fill();
+      break;
+    }
+    case 'lampung': {
+      drawSkyGradient(c, ['#37474f','#546e7a','#90a4ae']);
+      c.fillStyle = 'rgba(150,150,150,0.5)'; c.beginPath(); c.arc(W*0.7, H*0.2, 60, 0, Math.PI*2); c.fill();
+      c.fillStyle = 'rgba(120,120,120,0.4)'; c.beginPath(); c.arc(W*0.72, H*0.12, 50, 0, Math.PI*2); c.fill();
+      drawMountain(c, W*0.7, H*0.75, 280, 260, '#455a64');
+      c.fillStyle = '#ff5722';
+      c.beginPath();
+      c.moveTo(W*0.7-15, H*0.75-260+5); c.lineTo(W*0.7, H*0.75-260+30); c.lineTo(W*0.7+15, H*0.75-260+5);
+      c.closePath(); c.fill();
+      c.fillStyle = '#263238'; c.fillRect(0, H*0.78, W, H*0.22);
+      break;
+    }
+    case 'jakarta': {
+      drawSkyGradient(c, ['#ff7043','#ffab91','#ffccbc']);
+      drawSun(c, W*0.8, H*0.4, 60, '#fff59d', '#ffb74d');
+      for (let i=0;i<12;i++) {
+        const h = 80 + Math.random()*120;
+        drawBuilding(c, i*W/12+5, H*0.75, W/12-10, h, '#37474f');
+      }
+      drawMonas(c, W*0.5, H*0.78, 60);
+      break;
+    }
+    case 'jabar': {
+      drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']);
+      drawSun(c, W*0.85, H*0.13, 50);
+      drawMountain(c, W*0.2, H*0.7, 220, 180, '#546e7a');
+      drawMountain(c, W*0.7, H*0.7, 260, 220, '#455a64', true);
+      c.fillStyle = '#2e7d32';
+      c.beginPath(); c.moveTo(0, H*0.72);
+      for (let x=0;x<=W;x+=20) c.lineTo(x, H*0.72+Math.sin(x*0.02)*4);
+      c.lineTo(W,H); c.lineTo(0,H); c.closePath(); c.fill();
+      c.fillStyle = '#388e3c';
+      for (let i=0;i<5;i++) {
+        c.beginPath(); c.moveTo(0, H*0.78+i*15);
+        for (let x=0;x<=W;x+=20) c.lineTo(x, H*0.78+i*15+Math.sin(x*0.03+i)*3);
+        c.lineTo(W, H*0.78+i*15+10); c.lineTo(0, H*0.78+i*15+10);
+        c.closePath(); c.fill();
+      }
+      break;
+    }
+    case 'jateng': {
+      drawSkyGradient(c, ['#ffb74d','#ffcc80','#ffe0b2']);
+      drawSun(c, W*0.5, H*0.35, 70, '#fff59d', '#ffb74d');
+      for (let i=0;i<4;i++) drawPalmTree(c, W*0.1+i*W*0.27, H*0.75, 60);
+      drawBorobudur(c, W*0.5, H*0.85, 90);
+      break;
+    }
+    case 'diy': {
+      drawSkyGradient(c, ['#42a5f5','#90caf9','#e3f2fd']);
+      drawSun(c, W*0.15, H*0.15, 45);
+      c.fillStyle = '#8d6e63'; c.fillRect(W*0.2, H*0.55, W*0.6, H*0.25);
+      c.fillStyle = '#4e342e';
+      c.beginPath();
+      c.moveTo(W*0.15, H*0.55); c.lineTo(W*0.5, H*0.35); c.lineTo(W*0.85, H*0.55);
+      c.lineTo(W*0.8, H*0.6); c.lineTo(W*0.5, H*0.45); c.lineTo(W*0.2, H*0.6);
+      c.closePath(); c.fill();
+      c.fillStyle = '#5d4037';
+      for (let i=0;i<6;i++) c.fillRect(W*0.22+i*W*0.11, H*0.6, 8, H*0.2);
+      break;
+    }
+    case 'jatim': {
+      drawSkyGradient(c, ['#ffb74d','#ffcc80','#fff3e0']);
+      drawSun(c, W*0.5, H*0.3, 60, '#fff59d', '#ffb74d');
+      drawMountain(c, W*0.3, H*0.7, 200, 180, '#455a64');
+      drawMountain(c, W*0.65, H*0.75, 250, 140, '#5d4037');
+      c.fillStyle = 'rgba(255,255,255,0.5)';
+      c.beginPath(); c.arc(W*0.65, H*0.55, 30, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(W*0.68, H*0.5, 25, 0, Math.PI*2); c.fill();
+      c.fillStyle = '#d7ccc8'; c.fillRect(0, H*0.78, W, H*0.22);
+      break;
+    }
+    case 'banten': {
+      drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']);
+      drawSun(c, W*0.85, H*0.13, 45);
+      for (let i=0;i<4;i++) drawPineTree(c, W*0.08+i*W*0.05, H*0.72, 60, '#2e5d3a');
+      drawMasjid(c, W*0.6, H*0.8, 70, '#455a64');
+      break;
+    }
+    case 'bali': {
+      drawSkyGradient(c, ['#ff8a65','#ffb74d','#ffe0b2']);
+      drawSun(c, W*0.75, H*0.35, 70, '#fff59d', '#ffb74d');
+      drawRiceTerrace(c, H*0.72, 5, '#558b2f', '#689f38');
+      drawPura(c, W*0.2, H*0.72, 55);
+      drawPalmTree(c, W*0.85, H*0.72, 55);
+      break;
+    }
+    case 'ntb': {
+      drawSkyGradient(c, ['#42a5f5','#90caf9','#e3f2fd']);
+      drawSun(c, W*0.85, H*0.15, 50);
+      drawMountain(c, W*0.3, H*0.75, 260, 220, '#37474f');
+      drawMountain(c, W*0.7, H*0.75, 220, 200, '#455a64');
+      c.fillStyle = '#4dd0e1';
+      c.beginPath(); c.ellipse(W*0.5, H*0.72, 60, 15, 0, 0, Math.PI*2); c.fill();
+      break;
+    }
+    case 'ntt': {
+      drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']);
+      drawSun(c, W*0.85, H*0.13, 50);
+      drawMountain(c, W*0.5, H*0.7, 300, 200, '#455a64');
+      [[0.38,'#e91e63'],[0.5,'#00bcd4'],[0.62,'#4caf50']].forEach(([rx,col]) => {
+        c.fillStyle = col;
+        c.beginPath(); c.ellipse(W*rx, H*0.7, 40, 12, 0, 0, Math.PI*2); c.fill();
+      });
+      c.fillStyle = '#2e7d32';
+      c.fillRect(W*0.08, H*0.9, 100, 10);
+      c.beginPath(); c.ellipse(W*0.15, H*0.88, 20, 8, 0, 0, Math.PI*2); c.fill();
+      break;
+    }
+    case 'kalbar': {
+      drawSkyGradient(c, ['#4dd0e1','#b2ebf2','#e0f7fa']);
+      drawSun(c, W*0.85, H*0.13, 50);
+      for (let i=0;i<8;i++) drawPineTree(c, W*0.05+i*W*0.13, H*0.66, 70, '#1b5e20');
+      c.fillStyle = '#0277bd'; c.fillRect(0, H*0.72, W, H*0.28);
+      c.fillStyle = '#5d4037';
+      c.beginPath();
+      c.moveTo(W*0.3, H*0.82); c.lineTo(W*0.4, H*0.82); c.lineTo(W*0.38, H*0.85); c.lineTo(W*0.32, H*0.85);
+      c.closePath(); c.fill();
+      break;
+    }
+    case 'kalteng': {
+      drawSkyGradient(c, ['#43a047','#66bb6a','#a5d6a7']);
+      drawSun(c, W*0.85, H*0.15, 50, '#fff9c4', '#ffe082');
+      for (let i=0;i<10;i++) drawPineTree(c, i*W/10+15, H*0.75, 80, '#1b5e20');
+      c.fillStyle = 'rgba(27,94,32,0.7)';
+      c.beginPath();
+      c.arc(W*0.3, H*0.25, 60, 0, Math.PI*2);
+      c.arc(W*0.6, H*0.2, 70, 0, Math.PI*2);
+      c.arc(W*0.85, H*0.3, 55, 0, Math.PI*2);
+      c.fill();
+      break;
+    }
+    case 'kalsel': {
+      drawSkyGradient(c, ['#ffb74d','#ffcc80','#ffe0b2']);
+      drawSun(c, W*0.8, H*0.4, 60, '#fff59d', '#ffb74d');
+      c.fillStyle = '#1565c0'; c.fillRect(0, H*0.6, W, H*0.4);
+      [[0.15,0.7],[0.35,0.75],[0.55,0.68],[0.75,0.78],[0.9,0.72]].forEach(([rx,ry]) => {
+        c.fillStyle = '#8d6e63';
+        c.beginPath(); c.ellipse(W*rx, H*ry, 35, 8, 0, 0, Math.PI); c.fill();
+        c.fillStyle = '#ffd54f'; c.fillRect(W*rx-3, H*ry-25, 6, 25);
+        c.beginPath(); c.arc(W*rx+15, H*ry-10, 12, 0, Math.PI); c.fill();
+      });
+      break;
+    }
+    case 'kaltim': {
+      drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']);
+      drawSun(c, W*0.15, H*0.13, 45);
+      for (let i=0;i<6;i++) drawPineTree(c, i*W*0.12+10, H*0.7, 70, '#1b5e20');
+      drawBuilding(c, W*0.55, H*0.78, 60, 120, '#546e7a');
+      drawBuilding(c, W*0.65, H*0.78, 50, 150, '#455a64');
+      drawBuilding(c, W*0.78, H*0.78, 70, 100, '#607d8b');
+      break;
+    }
+    case 'kaltara': {
+      drawSkyGradient(c, ['#4dd0e1','#b2ebf2','#e0f7fa']);
+      drawSun(c, W*0.85, H*0.13, 45);
+      for (let i=0;i<12;i++) drawPineTree(c, i*W/12+10, H*0.72, 75, '#1b5e20');
+      c.fillStyle = '#4e342e';
+      c.beginPath(); c.arc(W*0.6, H*0.5, 12, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.ellipse(W*0.6, H*0.55, 10, 15, 0, 0, Math.PI*2); c.fill();
+      break;
+    }
+    case 'sulut': {
+      drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']);
+      drawSun(c, W*0.85, H*0.15, 45);
+      drawMountain(c, W*0.2, H*0.7, 220, 180, '#546e7a');
+      drawMountain(c, W*0.75, H*0.7, 240, 200, '#455a64');
+      c.fillStyle = '#0288d1'; c.fillRect(0, H*0.72, W, H*0.28);
+      c.fillStyle = 'rgba(0,0,0,0.3)';
+      for (let i=0;i<5;i++) { c.beginPath(); c.arc(W*0.15+i*W*0.15, H*0.85, 20, Math.PI, 0); c.fill(); }
+      break;
+    }
+    case 'sulteng': {
+      drawSkyGradient(c, ['#4dd0e1','#b2ebf2','#e0f7fa']);
+      drawSun(c, W*0.85, H*0.13, 50);
+      drawMountain(c, W*0.25, H*0.65, 200, 160, '#546e7a');
+      drawMountain(c, W*0.75, H*0.65, 220, 180, '#455a64');
+      c.fillStyle = '#1976d2'; c.fillRect(0, H*0.7, W, H*0.3);
+      c.fillStyle = 'rgba(255,255,255,0.3)';
+      for (let i=0;i<5;i++) c.fillRect(0, H*0.75+i*20, W, 1);
+      break;
+    }
+    case 'sulsel': {
+      drawSkyGradient(c, ['#ffb74d','#ffcc80','#ffe0b2']);
+      drawSun(c, W*0.8, H*0.35, 60, '#fff59d', '#ffb74d');
+      drawRumahTongkonan(c, W*0.3, H*0.78, 55);
+      c.fillStyle = '#5d4037';
+      c.beginPath();
+      c.moveTo(W*0.6, H*0.78); c.lineTo(W*0.9, H*0.78);
+      c.lineTo(W*0.85, H*0.85); c.lineTo(W*0.65, H*0.85);
+      c.closePath(); c.fill();
+      c.fillStyle = '#fff';
+      c.beginPath(); c.moveTo(W*0.75, H*0.78); c.lineTo(W*0.75, H*0.55); c.lineTo(W*0.85, H*0.78); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(W*0.75, H*0.78); c.lineTo(W*0.75, H*0.55); c.lineTo(W*0.65, H*0.78); c.closePath(); c.fill();
+      c.fillStyle = '#1565c0'; c.fillRect(0, H*0.85, W, H*0.15);
+      break;
+    }
+    case 'sultra': {
+      drawSkyGradient(c, ['#29b6f6','#4fc3f7','#81d4fa']);
+      drawSun(c, W*0.85, H*0.15, 50);
+      c.fillStyle = '#0277bd'; c.fillRect(0, H*0.55, W, H*0.45);
+      c.fillStyle = 'rgba(255,255,255,0.15)';
+      for (let i=0;i<6;i++) c.fillRect(0, H*0.6+i*25, W, 1);
+      [[0.15,'#ff7043'],[0.35,'#ffd54f'],[0.55,'#ba68c8'],[0.75,'#4db6ac'],[0.9,'#f06292']].forEach(([rx,col]) => {
+        c.fillStyle = col;
+        for (let i=0;i<3;i++) { c.beginPath(); c.arc(W*rx + i*10 - 10, H*0.85, 12, Math.PI, 0); c.fill(); }
+      });
+      for (let i=0;i<8;i++) {
+        c.fillStyle = 'rgba(255,255,255,0.6)';
+        const fx = (i*137)%W, fy = H*0.6 + (i*89)%(H*0.3);
+        c.beginPath(); c.ellipse(fx, fy, 8, 4, 0, 0, Math.PI*2); c.fill();
+      }
+      break;
+    }
+    case 'gorontalo': {
+      drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']);
+      drawSun(c, W*0.85, H*0.13, 45);
+      drawMountain(c, W*0.15, H*0.6, 180, 140, '#546e7a');
+      drawMountain(c, W*0.85, H*0.6, 200, 160, '#455a64');
+      c.fillStyle = '#1976d2'; c.fillRect(0, H*0.7, W, H*0.3);
+      c.fillStyle = '#8d6e63'; c.fillRect(W*0.4, H*0.65, W*0.2, H*0.1);
+      c.fillStyle = '#5d4037';
+      for (let i=0;i<3;i++) c.fillRect(W*0.4+i*W*0.07, H*0.6, W*0.04, H*0.06);
+      break;
+    }
+    case 'sulbar': {
+      drawSkyGradient(c, ['#4dd0e1','#b2ebf2','#e0f7fa']);
+      drawSun(c, W*0.85, H*0.13, 45);
+      drawMountain(c, W*0.2, H*0.65, 200, 160, '#546e7a');
+      drawMountain(c, W*0.5, H*0.65, 220, 180, '#455a64');
+      drawMountain(c, W*0.8, H*0.65, 200, 160, '#607d8b');
+      c.fillStyle = '#0277bd'; c.fillRect(0, H*0.75, W, H*0.25);
+      c.fillStyle = '#5d4037';
+      c.beginPath(); c.moveTo(W*0.3, H*0.85); c.lineTo(W*0.5, H*0.85);
+      c.lineTo(W*0.48, H*0.9); c.lineTo(W*0.32, H*0.9); c.closePath(); c.fill();
+      c.fillStyle = '#fff';
+      c.beginPath(); c.moveTo(W*0.4, H*0.85); c.lineTo(W*0.4, H*0.6); c.lineTo(W*0.5, H*0.85); c.closePath(); c.fill();
+      break;
+    }
+    case 'maluku': {
+      drawSkyGradient(c, ['#29b6f6','#81d4fa','#b3e5fc']);
+      drawSun(c, W*0.85, H*0.15, 50);
+      c.fillStyle = '#2e7d32';
+      c.beginPath(); c.ellipse(W*0.3, H*0.75, 180, 50, 0, Math.PI, 0); c.fill();
+      for (let i=0;i<4;i++) drawPalmTree(c, W*0.15+i*W*0.13, H*0.75, 55);
+      for (let i=0;i<15;i++) {
+        c.fillStyle = i%2===0 ? '#d32f2f' : '#f57c00';
+        c.beginPath(); c.arc(W*0.15 + (i*37)%(W*0.4), H*0.72 - (i%5)*15, 5, 0, Math.PI*2); c.fill();
+      }
+      c.fillStyle = '#0277bd'; c.fillRect(0, H*0.82, W, H*0.18);
+      break;
+    }
+    case 'malut': {
+      drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']);
+      drawSun(c, W*0.85, H*0.13, 45);
+      drawMountain(c, W*0.5, H*0.65, 280, 240, '#455a64');
+      c.fillStyle = 'rgba(255,255,255,0.4)'; c.beginPath(); c.arc(W*0.5, H*0.28, 30, 0, Math.PI*2); c.fill();
+      drawMasjid(c, W*0.2, H*0.85, 60, '#f5f5f5');
+      c.fillStyle = '#1565c0'; c.fillRect(0, H*0.9, W, H*0.1);
+      break;
+    }
+    case 'papua': {
+      drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']);
+      drawSun(c, W*0.85, H*0.13, 50);
+      drawMountain(c, W*0.2, H*0.7, 220, 200, '#546e7a', true);
+      drawMountain(c, W*0.5, H*0.7, 260, 240, '#455a64', true);
+      drawMountain(c, W*0.8, H*0.7, 220, 200, '#607d8b', true);
+      c.fillStyle = '#ffd54f';
+      c.beginPath();
+      c.moveTo(W*0.15, H*0.35);
+      c.quadraticCurveTo(W*0.2, H*0.3, W*0.25, H*0.35);
+      c.quadraticCurveTo(W*0.2, H*0.38, W*0.15, H*0.35);
+      c.fill();
+      c.fillStyle = '#ff5722'; c.fillRect(W*0.18, H*0.36, 3, 20);
+      break;
+    }
+    case 'papbar': {
+      drawSkyGradient(c, ['#29b6f6','#81d4fa','#b3e5fc']);
+      drawSun(c, W*0.85, H*0.15, 50);
+      [[0.15,0.75,60],[0.35,0.72,80],[0.55,0.78,70],[0.75,0.74,90],[0.9,0.7,50]].forEach(([rx,ry,r]) => {
+        c.fillStyle = '#2e7d32';
+        c.beginPath(); c.arc(W*rx, H*ry, r, Math.PI, 0); c.fill();
+        c.fillStyle = '#1b5e20';
+        c.beginPath(); c.arc(W*rx, H*ry-5, r*0.9, Math.PI, 0); c.fill();
+      });
+      c.fillStyle = '#00acc1'; c.fillRect(0, H*0.82, W, H*0.18);
+      c.fillStyle = 'rgba(255,255,255,0.3)';
+      for (let i=0;i<5;i++) c.fillRect(0, H*0.85+i*15, W, 1);
+      break;
+    }
+    default: {
+      drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']);
+      drawSun(c, W*0.85, H*0.15, 50);
+      break;
+    }
+  }
+
+  for (let i=0;i<4;i++) {
+    const cx = (i*220 + gameTime*20) % (W+200) - 100;
+    drawCloudBg(c, cx, 40 + i*25, 40, 0.5);
+  }
+}
+
+function drawBackgroundToContext(c, theme, cw, ch) {
+  c.save();
+  c.scale(cw/W, ch/H);
+
+  const themes = {
+    aceh: () => { drawSkyGradient(c, ['#1a237e','#4a148c','#e65100','#ff9800']); drawSun(c, W*0.75, H*0.55, 80, '#fff59d', '#ffb74d'); drawMasjid(c, W*0.5, H*0.78, 70, '#f5f5f5'); },
+    sumut: () => { drawSkyGradient(c, ['#42a5f5','#81d4fa','#b3e5fc']); drawMountain(c, W*0.4, H*0.6, 200, 180, '#37474f'); c.fillStyle = '#1976d2'; c.fillRect(0, H*0.65, W, H*0.35); },
+    sumbar: () => { drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']); drawMountain(c, W*0.7, H*0.75, 250, 200, '#616161'); drawRumahGadang(c, W*0.5, H*0.85, 60); },
+    riau: () => { drawSkyGradient(c, ['#64b5f6','#bbdefb','#e3f2fd']); for (let i=0;i<5;i++) drawPineTree(c, i*W/5+10, H*0.65, 80, '#2e5d3a'); c.fillStyle = '#0277bd'; c.fillRect(0, H*0.75, W, H*0.25); },
+    kepri: () => { drawSkyGradient(c, ['#29b6f6','#81d4fa','#b3e5fc']); c.fillStyle = '#2e7d32'; c.beginPath(); c.ellipse(W*0.5, H*0.75, 200, 50, 0, Math.PI, 0); c.fill(); c.fillStyle = '#0288d1'; c.fillRect(0, H*0.82, W, H*0.18); },
+    jambi: () => { drawSkyGradient(c, ['#4dd0e1','#b2ebf2','#e0f7fa']); for (let i=0;i<4;i++) drawPineTree(c, i*W/4+20, H*0.65, 70); drawCandi(c, W*0.5, H*0.88, 60); },
+    sumsel: () => { drawSkyGradient(c, ['#42a5f5','#90caf9','#e3f2fd']); c.strokeStyle = '#d32f2f'; c.lineWidth = 8; c.beginPath(); c.moveTo(0,H*0.7); c.lineTo(W,H*0.7); c.stroke(); c.fillStyle = '#b71c1c'; c.fillRect(W*0.2-10, H*0.4, 20, H*0.3); c.fillRect(W*0.8-10, H*0.4, 20, H*0.3); },
+    babel: () => { drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']); c.fillStyle = '#0288d1'; c.fillRect(0, H*0.68, W, H*0.32); [[0.3,0.75,60,40],[0.7,0.78,70,50]].forEach(([rx,ry,w,h]) => { c.fillStyle = '#616161'; c.beginPath(); c.ellipse(W*rx, H*ry, w, h, 0, 0, Math.PI*2); c.fill(); }); },
+    bengkulu: () => { drawSkyGradient(c, ['#81d4fa','#b3e5fc','#e1f5fe']); c.fillStyle = '#ffe0b2'; c.fillRect(0, H*0.75, W, H*0.25); c.fillStyle = '#c62828'; c.beginPath(); c.arc(W*0.5, H*0.85, 35, 0, Math.PI*2); c.fill(); },
+    lampung: () => { drawSkyGradient(c, ['#37474f','#546e7a','#90a4ae']); drawMountain(c, W*0.5, H*0.75, 280, 240, '#455a64'); c.fillStyle = '#263238'; c.fillRect(0, H*0.8, W, H*0.2); },
+    jakarta: () => { drawSkyGradient(c, ['#ff7043','#ffab91','#ffccbc']); for (let i=0;i<8;i++) drawBuilding(c, i*W/8+5, H*0.75, W/8-10, 100, '#37474f'); drawMonas(c, W*0.5, H*0.78, 60); },
+    jabar: () => { drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']); drawMountain(c, W*0.6, H*0.7, 260, 220, '#455a64'); c.fillStyle = '#2e7d32'; c.fillRect(0, H*0.75, W, H*0.25); },
+    jateng: () => { drawSkyGradient(c, ['#ffb74d','#ffcc80','#ffe0b2']); drawBorobudur(c, W*0.5, H*0.85, 90); },
+    diy: () => { drawSkyGradient(c, ['#42a5f5','#90caf9','#e3f2fd']); c.fillStyle = '#8d6e63'; c.fillRect(W*0.2, H*0.55, W*0.6, H*0.25); c.fillStyle = '#4e342e'; c.beginPath(); c.moveTo(W*0.15, H*0.55); c.lineTo(W*0.5, H*0.35); c.lineTo(W*0.85, H*0.55); c.closePath(); c.fill(); },
+    jatim: () => { drawSkyGradient(c, ['#ffb74d','#ffcc80','#fff3e0']); drawMountain(c, W*0.65, H*0.75, 250, 140, '#5d4037'); c.fillStyle = '#d7ccc8'; c.fillRect(0, H*0.82, W, H*0.18); },
+    banten: () => { drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']); drawMasjid(c, W*0.5, H*0.8, 70, '#455a64'); },
+    bali: () => { drawSkyGradient(c, ['#ff8a65','#ffb74d','#ffe0b2']); drawRiceTerrace(c, H*0.72, 4, '#558b2f', '#689f38'); drawPura(c, W*0.3, H*0.72, 55); },
+    ntb: () => { drawSkyGradient(c, ['#42a5f5','#90caf9','#e3f2fd']); drawMountain(c, W*0.5, H*0.75, 260, 220, '#37474f'); },
+    ntt: () => { drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']); drawMountain(c, W*0.5, H*0.7, 300, 200, '#455a64'); c.fillStyle = '#00bcd4'; c.beginPath(); c.ellipse(W*0.5, H*0.7, 60, 12, 0, 0, Math.PI*2); c.fill(); },
+    kalbar: () => { drawSkyGradient(c, ['#4dd0e1','#b2ebf2','#e0f7fa']); for (let i=0;i<6;i++) drawPineTree(c, i*W/6+10, H*0.7, 80, '#1b5e20'); c.fillStyle = '#0277bd'; c.fillRect(0, H*0.75, W, H*0.25); },
+    kalteng: () => { drawSkyGradient(c, ['#43a047','#66bb6a','#a5d6a7']); for (let i=0;i<8;i++) drawPineTree(c, i*W/8+10, H*0.75, 90, '#1b5e20'); },
+    kalsel: () => { drawSkyGradient(c, ['#ffb74d','#ffcc80','#ffe0b2']); c.fillStyle = '#1565c0'; c.fillRect(0, H*0.6, W, H*0.4); for (let i=0;i<4;i++) { c.fillStyle = '#8d6e63'; c.beginPath(); c.ellipse(W*0.2+i*W*0.2, H*0.75, 35, 8, 0, 0, Math.PI); c.fill(); } },
+    kaltim: () => { drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']); for (let i=0;i<4;i++) drawPineTree(c, i*W*0.15, H*0.72, 80, '#1b5e20'); drawBuilding(c, W*0.65, H*0.78, 60, 120, '#546e7a'); },
+    kaltara: () => { drawSkyGradient(c, ['#4dd0e1','#b2ebf2','#e0f7fa']); for (let i=0;i<10;i++) drawPineTree(c, i*W/10+10, H*0.72, 80, '#1b5e20'); },
+    sulut: () => { drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']); drawMountain(c, W*0.5, H*0.7, 240, 200, '#546e7a'); c.fillStyle = '#0288d1'; c.fillRect(0, H*0.72, W, H*0.28); },
+    sulteng: () => { drawSkyGradient(c, ['#4dd0e1','#b2ebf2','#e0f7fa']); drawMountain(c, W*0.3, H*0.65, 200, 160, '#546e7a'); c.fillStyle = '#1976d2'; c.fillRect(0, H*0.7, W, H*0.3); },
+    sulsel: () => { drawSkyGradient(c, ['#ffb74d','#ffcc80','#ffe0b2']); drawRumahTongkonan(c, W*0.3, H*0.78, 55); c.fillStyle = '#5d4037'; c.beginPath(); c.moveTo(W*0.6, H*0.78); c.lineTo(W*0.9, H*0.78); c.lineTo(W*0.85, H*0.85); c.lineTo(W*0.65, H*0.85); c.closePath(); c.fill(); },
+    sultra: () => { drawSkyGradient(c, ['#29b6f6','#4fc3f7','#81d4fa']); c.fillStyle = '#0277bd'; c.fillRect(0, H*0.55, W, H*0.45); for (let i=0;i<5;i++) { c.fillStyle = ['#ff7043','#ffd54f','#ba68c8','#4db6ac','#f06292'][i]; c.beginPath(); c.arc(W*0.15+i*W*0.18, H*0.85, 20, Math.PI, 0); c.fill(); } },
+    gorontalo: () => { drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']); c.fillStyle = '#1976d2'; c.fillRect(0, H*0.7, W, H*0.3); c.fillStyle = '#8d6e63'; c.fillRect(W*0.4, H*0.65, W*0.2, H*0.1); },
+    sulbar: () => { drawSkyGradient(c, ['#4dd0e1','#b2ebf2','#e0f7fa']); drawMountain(c, W*0.5, H*0.65, 220, 180, '#455a64'); c.fillStyle = '#0277bd'; c.fillRect(0, H*0.75, W, H*0.25); },
+    maluku: () => { drawSkyGradient(c, ['#29b6f6','#81d4fa','#b3e5fc']); c.fillStyle = '#2e7d32'; c.beginPath(); c.ellipse(W*0.3, H*0.75, 180, 50, 0, Math.PI, 0); c.fill(); drawPalmTree(c, W*0.3, H*0.75, 55); },
+    malut: () => { drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']); drawMountain(c, W*0.5, H*0.65, 280, 240, '#455a64'); drawMasjid(c, W*0.2, H*0.85, 60, '#f5f5f5'); },
+    papua: () => { drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']); drawMountain(c, W*0.3, H*0.7, 220, 200, '#546e7a', true); drawMountain(c, W*0.7, H*0.7, 220, 200, '#607d8b', true); },
+    papbar: () => { drawSkyGradient(c, ['#29b6f6','#81d4fa','#b3e5fc']); for (let i=0;i<4;i++) { const rx = 0.2 + i*0.2; c.fillStyle = '#2e7d32'; c.beginPath(); c.arc(W*rx, H*0.75, 55, Math.PI, 0); c.fill(); } c.fillStyle = '#00acc1'; c.fillRect(0, H*0.82, W, H*0.18); }
+  };
+
+  const fn = themes[theme];
+  if (fn) fn();
+  else {
+    drawSkyGradient(c, ['#4fc3f7','#b3e5fc','#e1f5fe']);
+    drawSun(c, W*0.85, H*0.15, 50);
+  }
+  c.restore();
+}
+
+/* =========================================================
+   GAME LOGIC
+   ========================================================= */
+function initClouds() {
+  clouds = [];
+  for (let i=0;i<6;i++) clouds.push({ x: Math.random()*W, y: Math.random()*H*0.7, scale: 0.5+Math.random(), speed: 8+Math.random()*20, alpha: 0.4+Math.random()*0.4 });
+}
+
+function initGame() {
+  player = { x:130, y:H/2, vx:0, vy:0, size:34, speed:320, angle:0 };
+  obstacles = []; collectibles = []; particles = []; floatingTexts = [];
+  initClouds();
+  score = 0; coins = 0; starsCollected = 0;
+  lives = 3; level = 1; levelTarget = 400;
+  spawnTimer = 0; collectTimer = 0; cloudTimer = 0;
+  gameTime = 0; invincibleTimer = 0;
+  keys = {};
+  touchDir = { up:false, down:false, left:false, right:false };
+  updateHUD();
+}
+
+function updateHUD() {
+  document.getElementById('hudLevel').textContent = level;
+  document.getElementById('hudScore').textContent = score;
+  document.getElementById('hudCoins').textContent = coins;
+  document.getElementById('hudStars').textContent = starsCollected;
+  document.getElementById('hudProvince').textContent = selectedProvince.name.toUpperCase();
+  let h = '';
+  for (let i=0;i<3;i++) h += i<lives ? '<span class="heart-full">❤️</span>' : '<span class="heart-empty">🖤</span>';
+  document.getElementById('hearts').innerHTML = h;
+}
+
+function hideAllOverlays() {
+  document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
+  document.getElementById('hud').classList.remove('active');
+  document.getElementById('dpad').classList.remove('active');
+  document.getElementById('pauseBtn').classList.remove('active');
+  document.getElementById('countdownOverlay').classList.remove('active');
+}
+
+function showMenu() { hideAllOverlays(); document.getElementById('mainMenu').classList.remove('hidden'); state = GameState.MENU; }
+function showProvinces() {
+  hideAllOverlays();
+  document.getElementById('provincesMenu').classList.remove('hidden');
+  state = GameState.PROVINCES;
+  renderRegionTabs();
+  renderProvinceGrid();
+  renderKiteGridCompact();
+  updateSelectedInfo();
+  updateComboSummary();
+}
+function showHow() { hideAllOverlays(); document.getElementById('howMenu').classList.remove('hidden'); state = GameState.HOW; }
+function showSettings() {
+  hideAllOverlays();
+  document.getElementById('settingsMenu').classList.remove('hidden');
+  state = GameState.SETTINGS;
+  document.getElementById('toggleMusic').checked = !Music.muted;
+  document.getElementById('toggleSFX').checked = !SFX.muted;
+  document.getElementById('toggleFact').checked = showFactEnabled;
+}
+
+function startGame() {
+  hideAllOverlays();
+  initGame();
+  state = GameState.PLAYING;
+  document.getElementById('hud').classList.add('active');
+  document.getElementById('dpad').classList.add('active');
+  document.getElementById('pauseBtn').classList.add('active');
+  showLevelNotif('LEVEL 1');
+  lastTime = performance.now();
+
+  if (showFactEnabled && selectedProvince) {
+    setTimeout(() => {
+      if (state === GameState.PLAYING) pauseGameForFact();
+    }, 500);
+  }
+}
+
+function pauseGameForFact() {
+  if (state !== GameState.PLAYING) return;
+  state = GameState.PAUSED;
+  gamePausedByFact = true;
+  document.getElementById('factProvince').textContent = selectedProvince.name;
+  document.getElementById('factText').textContent = selectedProvince.fact;
+  document.getElementById('factPopup').classList.add('show');
+  document.getElementById('pauseBtn').classList.remove('active');
+}
+
+function closeFactPopup() {
+  document.getElementById('factPopup').classList.remove('show');
+  if (gamePausedByFact) {
+    gamePausedByFact = false;
+    state = GameState.PLAYING;
+    document.getElementById('pauseBtn').classList.add('active');
+    lastTime = performance.now();
+  }
+}
+
+function pauseGame() {
+  if (state !== GameState.PLAYING) return;
+  state = GameState.PAUSED;
+  SFX.pause();
+  document.getElementById('pauseScore').textContent = score;
+  document.getElementById('pauseLevel').textContent = level;
+  document.getElementById('pauseLives').textContent = lives;
+  document.getElementById('pauseOverlay').classList.remove('hidden');
+  document.getElementById('pauseBtn').classList.remove('active');
+}
+
+function resumeGame() {
+  if (state !== GameState.PAUSED) return;
+  SFX.resumeSound();
+  document.getElementById('pauseOverlay').classList.add('hidden');
+  startCountdown();
+}
+
+function startCountdown() {
+  state = GameState.COUNTDOWN;
+  const overlay = document.getElementById('countdownOverlay');
+  const numEl = document.getElementById('countdownNum');
+  overlay.classList.add('active');
+
+  let count = 3;
+  numEl.textContent = count;
+  SFX.tick();
+  numEl.style.animation = 'none';
+  void numEl.offsetWidth;
+  numEl.style.animation = 'countdownPop 0.85s ease-out';
+
+  const tick = () => {
+    count--;
+    if (count > 0) {
+      numEl.textContent = count;
+      SFX.tick();
+      numEl.style.animation = 'none';
+      void numEl.offsetWidth;
+      numEl.style.animation = 'countdownPop 0.85s ease-out';
+      setTimeout(tick, 850);
+    } else {
+      numEl.textContent = 'GO!';
+      SFX.go();
+      numEl.style.animation = 'none';
+      void numEl.offsetWidth;
+      numEl.style.animation = 'countdownPop 0.85s ease-out';
+      setTimeout(() => {
+        overlay.classList.remove('active');
+        state = GameState.PLAYING;
+        document.getElementById('pauseBtn').classList.add('active');
+        lastTime = performance.now();
+      }, 700);
+    }
+  };
+  setTimeout(tick, 850);
+}
+
+function restartGame() {
+  SFX.click();
+  document.getElementById('pauseOverlay').classList.add('hidden');
+  document.getElementById('gameOverOverlay').classList.add('hidden');
+  startGame();
+}
+
+function toMainMenu() {
+  SFX.back();
+  document.getElementById('pauseOverlay').classList.add('hidden');
+  document.getElementById('gameOverOverlay').classList.add('hidden');
+  showMenu();
+}
+
+function gameOver() {
+  state = GameState.GAMEOVER;
+  SFX.gameover();
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('finalLevel').textContent = level;
+  document.getElementById('finalCoins').textContent = coins;
+  document.getElementById('finalStars').textContent = starsCollected;
+  document.getElementById('gameOverOverlay').classList.remove('hidden');
+  document.getElementById('hud').classList.remove('active');
+  document.getElementById('dpad').classList.remove('active');
+  document.getElementById('pauseBtn').classList.remove('active');
+}
+
+function showLevelNotif(text) {
+  const el = document.getElementById('levelNotif');
+  el.textContent = text;
+  el.classList.add('show');
+  levelNotifTimer = 2;
+}
+
+function renderRegionTabs() {
+  const tabs = document.getElementById('regionTabs');
+  tabs.innerHTML = '';
+  const regions = ['Semua', 'Sumatera', 'Jawa', 'Bali & Nusa Tenggara', 'Kalimantan', 'Sulawesi', 'Maluku & Papua'];
+  regions.forEach(r => {
+    const t = document.createElement('div');
+    t.className = 'region-tab' + (r === activeRegion ? ' active' : '');
+    t.textContent = r;
+    t.onclick = () => { SFX.click(); activeRegion = r; renderRegionTabs(); renderProvinceGrid(); };
+    tabs.appendChild(t);
+  });
+}
+
+function renderProvinceGrid() {
+  const grid = document.getElementById('provinceGrid');
+  grid.innerHTML = '';
+  const filtered = activeRegion === 'Semua' ? PROVINCES : PROVINCES.filter(p => p.region === activeRegion);
+
+  filtered.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'province-card' + (p.id === selectedProvince.id ? ' selected' : '');
+    const cvs = document.createElement('canvas');
+    cvs.width = 140; cvs.height = 50;
+    drawBackgroundToContext(cvs.getContext('2d'), p.theme, 140, 50);
+    card.appendChild(cvs);
+    const nameEl = document.createElement('div');
+    nameEl.className = 'prov-name';
+    nameEl.textContent = p.name;
+    card.appendChild(nameEl);
+    card.onclick = () => {
+      SFX.select();
+      selectedProvince = p;
+      renderProvinceGrid();
+      updateSelectedInfo();
+      updateComboSummary();
+    };
+    card.onmouseenter = () => SFX.hover();
+    grid.appendChild(card);
+  });
+}
+
+function updateSelectedInfo() {
+  if (!selectedProvince) return;
+  document.getElementById('infoTitle').textContent = selectedProvince.name;
+  document.getElementById('infoDesc').textContent = selectedProvince.desc;
+  document.getElementById('infoFact').textContent = selectedProvince.fact;
+}
+
+function renderKiteGridCompact() {
+  const grid = document.getElementById('kiteGridCompact');
+  if (!grid) return;
+  grid.innerHTML = '';
+  KITES.forEach((kite, idx) => {
+    const card = document.createElement('div');
+    card.className = 'kite-card-mini' + (idx === selectedKite ? ' selected' : '');
+    const c = document.createElement('canvas');
+    c.width = 44; c.height = 44;
+    drawKitePreview(c.getContext('2d'), kite, 22, 22, 16);
+    card.appendChild(c);
+    const nameEl = document.createElement('div');
+    nameEl.className = 'kite-name-mini';
+    nameEl.textContent = kite.name;
+    card.appendChild(nameEl);
+    card.onclick = () => {
+      selectedKite = idx;
+      SFX.select();
+      renderKiteGridCompact();
+      updateComboSummary();
+    };
+    card.onmouseenter = () => SFX.hover();
+    grid.appendChild(card);
+  });
+}
+
+function updateComboSummary() {
+  const kite = KITES[selectedKite];
+  const prov = selectedProvince;
+
+  const cKite = document.getElementById('comboKitePreview');
+  if (cKite) {
+    const kctx = cKite.getContext('2d');
+    kctx.clearRect(0, 0, 80, 80);
+    drawKiteShape(kctx, kite, 40, 40, 26, 0);
+  }
+  document.getElementById('comboKiteName').textContent = 'Layang ' + kite.name;
+
+  const cProv = document.getElementById('comboProvPreview');
+  if (cProv) {
+    const pctx = cProv.getContext('2d');
+    pctx.clearRect(0, 0, 80, 80);
+    drawBackgroundToContext(pctx, prov.theme, 80, 80);
+  }
+  document.getElementById('comboProvName').textContent = prov.name;
+}
+
+function drawKitePreview(c, kite, cx, cy, size) {
+  c.clearRect(0,0,60,60);
+  drawKiteShape(c, kite, cx, cy, size, 0);
+}
+
+function drawKiteShape(c, kite, cx, cy, size, angle) {
+  c.save();
+  c.translate(cx, cy);
+  c.rotate(angle);
+  const s = size;
+
+  if (kite.type === 'diamond') {
+    c.fillStyle = kite.body;
+    c.beginPath();
+    c.moveTo(0,-s); c.lineTo(s*0.7,0); c.lineTo(0,s); c.lineTo(-s*0.7,0);
+    c.closePath(); c.fill();
+    c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke();
+    c.strokeStyle = kite.accent; c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(0,-s); c.lineTo(0,s);
+    c.moveTo(-s*0.7,0); c.lineTo(s*0.7,0);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(0,s);
+    c.quadraticCurveTo(s*0.3,s*1.4,-s*0.1,s*1.7);
+    c.stroke();
+  } else if (kite.type === 'butterfly') {
+    c.fillStyle = kite.body;
+    c.beginPath(); c.ellipse(-s*0.55,-s*0.2,s*0.55,s*0.7,-0.5,0,Math.PI*2); c.fill();
+    c.beginPath(); c.ellipse(s*0.55,-s*0.2,s*0.55,s*0.7,0.5,0,Math.PI*2); c.fill();
+    c.fillStyle = kite.accent;
+    c.beginPath(); c.ellipse(-s*0.5,s*0.3,s*0.4,s*0.45,0.3,0,Math.PI*2); c.fill();
+    c.beginPath(); c.ellipse(s*0.5,s*0.3,s*0.4,s*0.45,-0.3,0,Math.PI*2); c.fill();
+    c.fillStyle = '#5d4037';
+    c.beginPath(); c.ellipse(0,0,s*0.13,s*0.7,0,0,Math.PI*2); c.fill();
+  } else if (kite.type === 'bird') {
+    c.fillStyle = kite.body;
+    c.beginPath();
+    c.moveTo(0,-s*0.9); c.lineTo(s*0.9,0); c.lineTo(s*0.3,s*0.3);
+    c.lineTo(0,s*0.9); c.lineTo(-s*0.3,s*0.3); c.lineTo(-s*0.9,0);
+    c.closePath(); c.fill();
+    c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke();
+    c.fillStyle = kite.accent;
+    c.beginPath(); c.moveTo(0,-s*0.2); c.lineTo(s*0.7,0); c.lineTo(0,s*0.2); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(0,-s*0.2); c.lineTo(-s*0.7,0); c.lineTo(0,s*0.2); c.closePath(); c.fill();
+  } else if (kite.type === 'dragon') {
+    c.fillStyle = kite.body;
+    c.beginPath();
+    c.moveTo(0,-s); c.lineTo(s*0.5,-s*0.3); c.lineTo(s*0.85,0);
+    c.lineTo(s*0.5,s*0.4); c.lineTo(0,s);
+    c.lineTo(-s*0.5,s*0.4); c.lineTo(-s*0.85,0); c.lineTo(-s*0.5,-s*0.3);
+    c.closePath(); c.fill();
+    c.strokeStyle = '#fff'; c.lineWidth = 2; c.stroke();
+    c.fillStyle = kite.accent;
+    c.beginPath(); c.arc(-s*0.25,-s*0.25,s*0.13,0,Math.PI*2); c.fill();
+    c.beginPath(); c.arc(s*0.25,-s*0.25,s*0.13,0,Math.PI*2); c.fill();
+    c.strokeStyle = '#ffd54f'; c.lineWidth = 2.5;
+    c.beginPath();
+    c.moveTo(-s*0.2,-s*0.75); c.lineTo(-s*0.35,-s*1.1);
+    c.moveTo(s*0.2,-s*0.75); c.lineTo(s*0.35,-s*1.1);
+    c.stroke();
+  }
+  c.restore();
+}
+
+function spawnObstacle() {
+  const types = ['cloud','storm','balloon'];
+  const t = types[Math.floor(Math.random()*types.length)];
+  const size = t === 'balloon' ? 28 : 40 + Math.random()*20;
+  const y = size + Math.random()*(H - size*2 - 80);
+  const speed = 120 + level*22 + Math.random()*60;
+  obstacles.push({ x:W+60, y:y, w:size*1.6, h:size, speed:speed, type:t, angle:Math.random()*Math.PI*2, rotSpeed:(Math.random()-0.5)*2 });
+}
+
+function spawnCollectible() {
+  const isStar = Math.random() < 0.45;
+  const size = isStar ? 18 : 20;
+  const y = 60 + Math.random()*(H - 160);
+  collectibles.push({ x:W+40, y:y, w:size*2, h:size*2, speed:110+level*15, type:isStar?'star':'coin', phase:Math.random()*Math.PI*2 });
+}
+
+function spawnParticles(x,y,color,count,spread) {
+  for (let i=0;i<count;i++) {
+    const a = Math.random()*Math.PI*2;
+    const sp = spread*(0.3+Math.random());
+    particles.push({ x,y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-30, life:0.6+Math.random()*0.5, maxLife:0.6+Math.random()*0.5, color, size:2+Math.random()*4 });
+  }
+}
+
+function showFloatingText(x,y,text,color) {
+  floatingTexts.push({ x,y, text, color, life:0.9, maxLife:0.9 });
+}
+
+function update(dt) {
+  gameTime += dt;
+  if (levelNotifTimer > 0) { levelNotifTimer -= dt; if (levelNotifTimer <= 0) document.getElementById('levelNotif').classList.remove('show'); }
+  if (invincibleTimer > 0) invincibleTimer -= dt;
+
+  let dx = 0, dy = 0;
+  if (keys['ArrowUp'] || touchDir.up) dy -= 1;
+  if (keys['ArrowDown'] || touchDir.down) dy += 1;
+  if (keys['ArrowLeft'] || touchDir.left) dx -= 1;
+  if (keys['ArrowRight'] || touchDir.right) dx += 1;
+  if (dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
+
+  player.x += dx * player.speed * dt;
+  player.y += dy * player.speed * dt;
+
+  const margin = 40;
+  if (player.x < margin) player.x = margin;
+  if (player.x > W-margin) player.x = W-margin;
+  if (player.y < 70) player.y = 70;
+  if (player.y > H-60) player.y = H-60;
+
+  const targetAngle = dy * 0.35;
+  player.angle += (targetAngle - player.angle) * Math.min(1, dt*8);
+
+  if (Math.random() < 0.3) {
+    particles.push({
+      x: player.x-20, y: player.y + (Math.random()-0.5)*20,
+      vx: -60-Math.random()*40, vy: (Math.random()-0.5)*30,
+      life: 0.5, maxLife: 0.5, color: 'rgba(255,255,255,0.6)', size: 2+Math.random()*3
+    });
+  }
+
+  spawnTimer -= dt;
+  if (spawnTimer <= 0) {
+    spawnObstacle();
+    const interval = Math.max(0.45, 1.5 - level*0.1);
+    spawnTimer = interval + Math.random()*0.5;
+  }
+  collectTimer -= dt;
+  if (collectTimer <= 0) { spawnCollectible(); collectTimer = 0.9 + Math.random()*1.2; }
+
+  cloudTimer -= dt;
+  if (cloudTimer <= 0) {
+    clouds.push({ x:W+60, y:Math.random()*H*0.6, scale:0.5+Math.random(), speed:15+Math.random()*25, alpha:0.3+Math.random()*0.4 });
+    cloudTimer = 2+Math.random()*3;
+  }
+  for (let i=clouds.length-1;i>=0;i--) {
+    clouds[i].x -= clouds[i].speed*dt;
+    if (clouds[i].x < -150) clouds.splice(i,1);
+  }
+
+  for (let i=obstacles.length-1;i>=0;i--) {
+    const o = obstacles[i];
+    o.x -= o.speed*dt;
+    o.angle += o.rotSpeed*dt;
+    if (invincibleTimer <= 0 && rectCircleCollide(o.x-o.w/2, o.y-o.h/2, o.w, o.h, player.x, player.y, player.size*0.65)) {
+      lives--; invincibleTimer = 1.5;
+      SFX.hit();
+      spawnParticles(player.x, player.y, '#ff5252', 16, 180);
+      spawnParticles(o.x, o.y, '#ffffff', 10, 120);
+      updateHUD();
+      obstacles.splice(i,1);
+      if (lives <= 0) { gameOver(); return; }
+      continue;
+    }
+    if (o.x < -100) obstacles.splice(i,1);
+  }
+
+  for (let i=collectibles.length-1;i>=0;i--) {
+    const c = collectibles[i];
+    c.x -= c.speed*dt;
+    c.phase += dt*4;
+    if (rectCircleCollide(c.x-c.w/2, c.y-c.h/2, c.w, c.h, player.x, player.y, player.size*0.9)) {
+      if (c.type === 'star') { score += 50; starsCollected++; SFX.star(); spawnParticles(c.x, c.y, '#ffd54f', 14, 150); showFloatingText(c.x, c.y, '+50', '#ffd54f'); }
+      else { score += 25; coins++; SFX.coin(); spawnParticles(c.x, c.y, '#ffca28', 12, 140); showFloatingText(c.x, c.y, '+25', '#ffca28'); }
+      collectibles.splice(i,1);
+      updateHUD();
+      checkLevelUp();
+      continue;
+    }
+    if (c.x < -60) collectibles.splice(i,1);
+  }
+
+  for (let i=particles.length-1;i>=0;i--) {
+    const p = particles[i];
+    p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 60*dt; p.life -= dt;
+    if (p.life <= 0) particles.splice(i,1);
+  }
+
+  for (let i=floatingTexts.length-1;i>=0;i--) {
+    const ft = floatingTexts[i];
+    ft.y -= 50*dt; ft.life -= dt;
+    if (ft.life <= 0) floatingTexts.splice(i,1);
+  }
+}
+
+function checkLevelUp() {
+  if (score >= levelTarget) {
+    level++;
+    levelTarget = level*400 + (level-1)*200;
+    player.speed += 15;
+    SFX.levelup();
+    showLevelNotif('LEVEL ' + level + '!');
+    spawnParticles(player.x, player.y, '#ffd54f', 24, 220);
+    updateHUD();
+  }
+}
+
+function rectCircleCollide(rx,ry,rw,rh,cx,cy,cr) {
+  const closestX = Math.max(rx, Math.min(cx, rx+rw));
+  const closestY = Math.max(ry, Math.min(cy, ry+rh));
+  const dx = cx-closestX, dy = cy-closestY;
+  return (dx*dx + dy*dy) < (cr*cr);
+}
+
+function render() {
+  drawBackgroundByTheme(selectedProvince.theme);
+  clouds.forEach(c => drawCloud(c.x, c.y, c.scale, c.alpha));
+
+  const inGame = state === GameState.PLAYING || state === GameState.PAUSED ||
+                 state === GameState.COUNTDOWN || state === GameState.GAMEOVER;
+  if (inGame) {
+    collectibles.forEach(c => {
+      if (c.type === 'star') drawStar(c.x, c.y + Math.sin(c.phase)*4, 16, '#ffd54f', '#f9a825');
+      else drawCoin(c.x, c.y + Math.sin(c.phase)*3, 18);
+    });
+    obstacles.forEach(o => {
+      if (o.type === 'cloud' || o.type === 'storm') drawStormCloud(o);
+      else if (o.type === 'balloon') drawBalloon(o);
+    });
+    particles.forEach(p => {
+      const a = p.life / p.maxLife;
+      ctx.globalAlpha = a;
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size*a, 0, Math.PI*2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    drawPlayer();
+
+    floatingTexts.forEach(ft => {
+      const a = ft.life / ft.maxLife;
+      ctx.globalAlpha = a;
+      ctx.fillStyle = ft.color;
+      ctx.font = 'bold 18px Segoe UI, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 4;
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.shadowBlur = 0;
+    });
+    ctx.globalAlpha = 1;
+
+    if (state === GameState.PLAYING || state === GameState.COUNTDOWN) drawLevelProgress();
+  }
+}
+
+function drawCloud(x,y,scale,alpha) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(x, y, 22*scale, 0, Math.PI*2);
+  ctx.arc(x+22*scale, y-8*scale, 18*scale, 0, Math.PI*2);
+  ctx.arc(x+42*scale, y, 20*scale, 0, Math.PI*2);
+  ctx.arc(x+20*scale, y+8*scale, 18*scale, 0, Math.PI*2);
+  ctx.fill(); ctx.restore();
+}
+
+function drawStormCloud(o) {
+  ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.angle*0.3);
+  ctx.fillStyle = '#546e7a';
+  ctx.beginPath();
+  ctx.arc(0, 0, o.w*0.45, 0, Math.PI*2);
+  ctx.arc(o.w*0.35, -o.h*0.15, o.w*0.35, 0, Math.PI*2);
+  ctx.arc(-o.w*0.35, -o.h*0.1, o.w*0.32, 0, Math.PI*2);
+  ctx.arc(o.w*0.15, o.h*0.15, o.w*0.3, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#ffeb3b'; ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, o.h*0.2); ctx.lineTo(-6, o.h*0.5); ctx.lineTo(4, o.h*0.45); ctx.lineTo(-2, o.h*0.8);
+  ctx.stroke(); ctx.restore();
+}
+
+function drawBalloon(o) {
+  ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.angle*0.2);
+  const r = o.w*0.4;
+  ctx.fillStyle = '#ef5350';
+  ctx.beginPath(); ctx.ellipse(0, -r*0.3, r, r*1.2, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#ff8a80';
+  ctx.beginPath(); ctx.ellipse(-r*0.3, -r*0.6, r*0.3, r*0.4, 0, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#795548'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, r*0.85); ctx.quadraticCurveTo(r*0.2, r*1.3, 0, r*1.6); ctx.stroke();
+  ctx.restore();
+}
+
+function drawStar(x,y,size,fill,stroke) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(Math.sin(Date.now()*0.002)*0.3);
+  ctx.shadowColor = fill; ctx.shadowBlur = 14; ctx.fillStyle = fill;
+  ctx.beginPath();
+  for (let i=0;i<10;i++) {
+    const r = i%2===0 ? size : size*0.45;
+    const a = (Math.PI/5)*i - Math.PI/2;
+    if (i===0) ctx.moveTo(Math.cos(a)*r, Math.sin(a)*r);
+    else ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
+  }
+  ctx.closePath(); ctx.fill(); ctx.shadowBlur = 0;
+  ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.restore();
+}
+
+function drawCoin(x,y,size) {
+  ctx.save(); ctx.translate(x, y);
+  ctx.shadowColor = '#ffca28'; ctx.shadowBlur = 12;
+  const grad = ctx.createRadialGradient(-size*0.3, -size*0.3, 2, 0, 0, size);
+  grad.addColorStop(0, '#fff9c4'); grad.addColorStop(0.5, '#ffca28'); grad.addColorStop(1, '#f57f17');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = '#f57f17'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(0, 0, size*0.7, 0, Math.PI*2); ctx.stroke();
+  ctx.fillStyle = '#f57f17';
+  ctx.font = 'bold ' + Math.floor(size) + 'px Segoe UI';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('★', 0, 1);
+  ctx.restore();
+}
+
+function drawPlayer() {
+  if (invincibleTimer > 0 && Math.floor(invincibleTimer*10)%2===0) ctx.globalAlpha = 0.35;
+  else ctx.globalAlpha = 1;
+
+  ctx.save();
+  ctx.globalAlpha = 0.15 * (invincibleTimer>0 ? 0.5 : 1);
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.ellipse(player.x, player.y + player.size*1.4, player.size*0.8, player.size*0.25, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(player.x+10, player.y+10);
+  ctx.quadraticCurveTo(player.x+60, player.y+80, player.x-40, player.y+140);
+  ctx.stroke();
+
+  const kite = KITES[selectedKite];
+  drawKiteShape(ctx, kite, player.x, player.y, player.size, player.angle);
+  ctx.globalAlpha = 1;
+}
+
+function drawLevelProgress() {
+  const barW = 180, barH = 10;
+  const x = W/2 - barW/2, y = 56;
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath(); ctx.roundRect(x-4, y-4, barW+8, barH+8, 8); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.beginPath(); ctx.roundRect(x, y, barW, barH, 5); ctx.fill();
+  const prevTarget = level === 1 ? 0 : (level-1)*400 + (level-2)*200;
+  const progress = Math.min(1, (score-prevTarget) / (levelTarget-prevTarget));
+  const grad = ctx.createLinearGradient(x, 0, x+barW, 0);
+  grad.addColorStop(0, '#ffd54f'); grad.addColorStop(1, '#ff8f00');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.roundRect(x, y, barW*progress, barH, 5); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 11px Segoe UI';
+  ctx.textAlign = 'center';
+  ctx.fillText('LEVEL ' + level + '  —  ' + score + ' / ' + levelTarget, W/2, y + barH + 14);
+  ctx.restore();
+}
+
+function gameLoop(timestamp) {
+  const dt = Math.min(0.05, (timestamp - lastTime)/1000);
+  lastTime = timestamp;
+  if (state === GameState.PLAYING) update(dt);
+  render();
+  requestAnimationFrame(gameLoop);
+}
+
+/* ============ INPUT ============ */
+document.addEventListener('keydown', (e) => {
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+  keys[e.key] = true;
+  if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
+    if (state === GameState.PLAYING) pauseGame();
+    else if (state === GameState.PAUSED && !gamePausedByFact) resumeGame();
+  }
+});
+document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+document.querySelectorAll('.dpad-btn').forEach(btn => {
+  const dir = btn.dataset.dir;
+  const press = (e) => { e.preventDefault(); touchDir[dir] = true; btn.classList.add('pressed'); };
+  const release = (e) => { e.preventDefault(); touchDir[dir] = false; btn.classList.remove('pressed'); };
+  btn.addEventListener('mousedown', press);
+  btn.addEventListener('mouseup', release);
+  btn.addEventListener('mouseleave', release);
+  btn.addEventListener('touchstart', press, { passive: false });
+  btn.addEventListener('touchend', release, { passive: false });
+  btn.addEventListener('touchcancel', release, { passive: false });
+});
+
+document.getElementById('pauseBtn').onclick = (e) => { e.stopPropagation(); pauseGame(); };
+
+/* ============ TOMBOL MENU ============ */
+document.getElementById('btnPlay').onclick = () => { SFX.start(); if (state === GameState.MENU) startGame(); };
+document.getElementById('btnProvinces').onclick = () => { SFX.click(); showProvinces(); };
+document.getElementById('btnHow').onclick = () => { SFX.click(); showHow(); };
+document.getElementById('btnSettings').onclick = () => { SFX.click(); showSettings(); };
+
+document.getElementById('btnProvincePlay').onclick = () => { SFX.start(); startGame(); };
+document.getElementById('btnProvinceBack').onclick = () => { SFX.back(); showMenu(); };
+document.getElementById('btnSettingsBack').onclick = () => { SFX.back(); showMenu(); };
+document.getElementById('btnHowBack').onclick = () => { SFX.back(); showMenu(); };
+
+document.getElementById('btnResume').onclick = resumeGame;
+document.getElementById('btnRestart').onclick = restartGame;
+document.getElementById('btnToMenu').onclick = toMainMenu;
+
+document.getElementById('btnGoRestart').onclick = restartGame;
+document.getElementById('btnGoChooseProvince').onclick = () => {
+  SFX.back();
+  document.getElementById('gameOverOverlay').classList.add('hidden');
+  showProvinces();
+};
+document.getElementById('btnGoMenu').onclick = () => {
+  SFX.back();
+  document.getElementById('gameOverOverlay').classList.add('hidden');
+  showMenu();
+};
+
+document.getElementById('factClose').onclick = () => { SFX.click(); closeFactPopup(); };
+
+document.getElementById('toggleMusic').onchange = (e) => { Music.setEnabled(e.target.checked); SFX.click(); };
+document.getElementById('toggleSFX').onchange = (e) => { SFX.setEnabled(e.target.checked); if (e.target.checked) SFX.click(); };
+document.getElementById('toggleFact').onchange = (e) => { showFactEnabled = e.target.checked; SFX.click(); };
+
+/* ============ FULLSCREEN ============ */
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+fullscreenBtn.onclick = (e) => {
+  e.stopPropagation();
+  SFX.click();
+  const el = document.documentElement;
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.msRequestFullscreen) el.msRequestFullscreen();
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    else if (document.msExitFullscreen) document.msExitFullscreen();
+  }
+};
+
+document.addEventListener('fullscreenchange', updateFullscreenIcon);
+document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+function updateFullscreenIcon() {
+  const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+  fullscreenBtn.textContent = isFs ? '⛶' : '⛶';
+  fullscreenBtn.title = isFs ? 'Keluar Fullscreen' : 'Fullscreen';
+}
+
+/* ============ POLYFILL ============ */
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    if (w < 2*r) r = w/2;
+    if (h < 2*r) r = h/2;
+    this.beginPath();
+    this.moveTo(x+r, y);
+    this.arcTo(x+w, y, x+w, y+h, r);
+    this.arcTo(x+w, y+h, x, y+h, r);
+    this.arcTo(x, y+h, x, y, r);
+    this.arcTo(x, y, x+w, y, r);
+    this.closePath();
+    return this;
+  };
+}
+
+/* ============ START ============ */
+initGame();
+showMenu();
+lastTime = performance.now();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
